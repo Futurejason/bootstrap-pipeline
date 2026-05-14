@@ -1,17 +1,21 @@
-# 工作项目目录（不发布）
-my-ali/
+# Local-only directories (not published)
+.kiro/
 ae/
+my-ali/
 ai-solution-expert-learning-path/
-# work-project/
-
-# 本地生成的文档（不发布，每个项目自己生成）
 docs/
+work-project/
+standard/
+universal-expert-engine/
 
-# 系统文件
+# Local-only files
+system-prompt.md
+
+# System files
 .DS_Store
 *.zip
 
-# 依赖
+# Dependencies
 node_modules/
 .venv/
 __pycache__/

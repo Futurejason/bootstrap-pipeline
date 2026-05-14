@@ -1,62 +1,90 @@
-# AI 全栈交付系统
+# Universal Expert Engine (UEE)
 
-## 这是什么
+> 全能行业专家引擎 v1.0.0
+> 用户只需要：提问 → 完善条件 → 确认方案 → 拿到结果。
 
-一套**平台无关的 AI 工作流标准**，将 AI 定义为七个角色的全栈交付专家，从会议记录到生产部署全程负责，每个阶段对结果负责。
+## 核心定位
 
-## 七阶段流程
+UEE 是一个让 AI 自主解决任何领域问题的工作流系统。AI 自动判断问题领域、复杂度，加载对应专家身份，按标准流程闭环交付，全程仅在 4 个关键节点请求用户介入。
+
+## 三档复杂度
+
+| 档位 | 适用 | 阶段数 | 时长估计 |
+|------|------|--------|---------|
+| L1 轻量 | FAQ、单点问答、概念解释 | 4 阶段 | < 2 小时 |
+| L2 标准 | 方案设计、文档撰写、行业咨询 | 6 阶段 | 半天-3 天 |
+| L3 完整 | 项目交付、复杂系统设计 | 7 阶段 | 1 周以上 |
+
+## 9 个独立可用 Skill
+
+每个 skill 既可单独调用，也能整体编排：
+
+1. **classify** — 问题分类与专家路由
+2. **clarify** — 问题澄清与理解确认
+3. **resource** — 资源分析与约束识别
+4. **plan** — 方案设计与对比
+5. **design** — 详细设计（仅 L3）
+6. **execute** — 执行产出
+7. **review** — 自检与质量门
+8. **deliver** — 交付包装
+9. **refine** — 反馈优化
+
+## 用户介入仅 4 处
+
+| 节点 | 时机 | 用户做什么 |
+|------|------|-----------|
+| 🔵 P1 | clarify 完成后 | 确认理解 |
+| 🔵 P2 | plan 完成后 | 选方案 |
+| 🔴 P3 | 遇阻塞 | 二选一/多选一 |
+| 🟢 P4 | deliver 完成后 | 验收 |
+
+## 使用方式
+
+### 方式 1：在 Kiro 中（最简单）
+通过 steering 自动加载，直接提问即可。
+
+### 方式 2：在其他平台
+把 `entry.md` 内容粘贴到对应平台的系统提示词。
+- Cursor: `.cursorrules` 或 Settings → Rules for AI
+- Claude Code: 项目根目录 `CLAUDE.md`
+- Windsurf: `.windsurfrules`
+- ChatGPT/GPTs: Instructions
+- Claude Projects: Project Instructions
+
+### 方式 3：单 Skill 调用
+直接告诉 AI："使用 review skill 检查这个文档"，会跳过流程编排只跑那一个 skill。
+
+## 项目结构
 
 ```
-阶段1 [解决方案专家] 理解问题 → 提出方案方向 + 资源清单        [用户确认]
-阶段2 [解决方案专家] 分析资源 → 循环澄清直到需求无歧义          [用户确认]
-阶段3 [产品经理]     整理 PRD → 功能需求 + 验收标准             [用户确认]
-阶段4 [架构师]       技术设计 → 架构 + 接口 + 部署方案          [用户确认]
-阶段5 [全栈工程师]   逐模块实现 → 代码与文档保持一致            [用户确认]
-阶段6 [QA 工程师]    端到端测试 → 覆盖所有入口 + 异常场景       [用户确认]
-阶段7 [DevOps]       部署上线 → 验证生产环境 → 自行排查问题     [用户确认]
+universal-expert-engine/
+├── entry.md              # 总入口（自包含路由 + 平台检测）
+├── ETHOS.md              # 行为准则（不变量）
+├── ARCHITECTURE.md       # 架构设计
+├── skills/               # 9 个独立 skill
+├── orchestrator/         # 流程编排
+├── experts/              # 专家身份库
+├── quality-gates/        # 质量保障组件
+├── adapters/             # 平台适配器
+├── templates/            # 输出模板
+└── examples/             # 完整示例
 ```
 
-## 核心承诺
+## 设计原则
 
-- 用户反馈问题，AI 自行排查修复，不转移给用户
-- 验收测试覆盖所有功能入口 + 异常场景
-- 部署前读取所有配置文件，识别潜在问题
-- 文档、代码、配置三者保持一致
+1. **复杂度自适应**：AI 自动判断 L1/L2/L3，不让用户操心
+2. **专家身份动态**：根据领域加载对应专家，不固定角色
+3. **四维质量门**：完备性/准确性/一致性/可行性，每阶段强制通过
+4. **证据链可追溯**：每个论断有论据 → 来源 → 可信度三元组
+5. **失败三层降级**：重试 → 备选 → 简化上报
 
-## 在不同工具中使用
+## 与 gstack / universal-problem-solver 的关系
 
-### Kiro（当前工具）
-已通过 `.kiro/steering/` 自动注入，无需额外配置。
+- 借鉴 gstack 的 **Skill 化架构**（独立子目录，可单独使用）
+- 继承 universal-problem-solver 的 **跨平台单文件入口**
+- 整合现有 7 阶段交付流程的 **质量保障与角色划分**
+- 新增 **复杂度自适应** 和 **动态专家身份**
 
-### Claude
-Settings → Custom Instructions → 粘贴 `system-prompt.md` 全文
+## 版本
 
-### ChatGPT
-Settings → Personalization → Custom Instructions → 粘贴 `system-prompt.md` 全文
-
-### Cursor
-项目根目录创建 `.cursorrules` → 粘贴 `system-prompt.md` 全文
-
-### GitHub Copilot
-`.github/copilot-instructions.md` → 粘贴 `system-prompt.md` 全文
-
-### 其他工具
-任何支持 System Prompt / 角色设定的工具 → 粘贴 `system-prompt.md` 全文
-
-## 文件结构
-
-```
-.
-├── system-prompt.md              # 可移植的核心配置（复制到任何工具）
-├── README.md                     # 本文件
-├── .kiro/
-│   └── steering/
-│       ├── project-overview.md   # 角色定义（Kiro 自动注入）
-│       └── workflow-standards.md # 七阶段规范（Kiro 自动注入）
-└── docs/                         # 工作过程中生成的文档
-    ├── requirements.md           # PRD（阶段3）
-    ├── design.md                 # 技术设计（阶段4）
-    ├── project.md                # 项目文档（阶段4）
-    ├── test-report.md            # 测试报告（阶段6/7）
-    └── changelog.md              # 变更记录
-```
+v1.0.0 — 初始发布

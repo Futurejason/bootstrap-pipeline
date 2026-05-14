@@ -7,73 +7,56 @@
 - Artifacts 输出长内容
 - 无终端能力
 
-## 从 git 克隆后的使用步骤
+## 使用步骤
 
-### 步骤 1：克隆仓库
+Claude Projects 是 Web 平台，不需要在"项目里激活"。准备好 entry.md 内容粘贴到 Project Instructions。
+
+### 步骤 1：先在本地装好 UEE
 
 ```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
+git clone https://github.com/Futurejason/bootstrap-pipeline.git ~/.uee
 ```
 
-### 步骤 2a：创建 Claude Project（推荐）
+### 步骤 2：复制 entry.md
+
+```bash
+# macOS
+cat ~/.uee/entry.md | pbcopy
+
+# Linux
+cat ~/.uee/entry.md | xclip -selection clipboard
+
+# Windows (Git Bash)
+cat ~/.uee/entry.md | clip
+```
+
+### 步骤 3：创建 Claude Project
 
 1. Claude.ai → Projects → New Project
-2. 设置 Project Instructions：
-   ```bash
-   # macOS
-   cat entry.md | pbcopy
+2. Set Project Instructions → 粘贴
+3. （可选）上传 Knowledge 文件：
 
-   # Linux
-   cat entry.md | xclip -selection clipboard
+   推荐优先级：
 
-   # Windows (Git Bash)
-   cat entry.md | clip
-   ```
-   把内容粘贴到 Project Instructions。
+   | 优先级 | 文件 |
+   |--------|------|
+   | ⭐⭐⭐ | `~/.uee/ETHOS.md` |
+   | ⭐⭐⭐ | `~/.uee/skills/classify/SKILL.md` |
+   | ⭐⭐⭐ | `~/.uee/skills/clarify/SKILL.md` |
+   | ⭐⭐⭐ | `~/.uee/skills/plan/SKILL.md` |
+   | ⭐⭐⭐ | `~/.uee/skills/review/SKILL.md` |
+   | ⭐⭐ | `~/.uee/quality-gates/four-dimensions.md` |
+   | ⭐⭐ | `~/.uee/quality-gates/evidence-chain.md` |
+   | ⭐⭐ | `~/.uee/experts/<your-domain>.md` |
+   | ⭐ | `~/.uee/examples/L2-business-plan.md` |
 
-3. 上传 Knowledge 文件：
-   - `ETHOS.md`
-   - `skills/classify/SKILL.md`
-   - `skills/clarify/SKILL.md`
-   - `skills/plan/SKILL.md`
-   - `skills/review/SKILL.md`
-   - `skills/deliver/SKILL.md`
-   - 常用 expert 文件
-
-   Claude 会自动用 Knowledge 中的文件回答。
-
-4. 在 Project 内开新对话即可使用。
-
-### 步骤 2b：常规对话
-
-新对话开头粘贴 entry.md 内容。
-
-## Knowledge 上传策略
-
-Claude Projects 的 Knowledge 文件数量有限（视订阅版本，通常 5-30 个）。
-
-推荐优先级：
-
-| 优先级 | 文件 | 理由 |
-|--------|------|------|
-| ⭐⭐⭐ | ETHOS.md | 全局准则 |
-| ⭐⭐⭐ | skills/classify/SKILL.md | 入口 |
-| ⭐⭐⭐ | skills/clarify/SKILL.md | 早期阶段必用 |
-| ⭐⭐⭐ | skills/plan/SKILL.md | 方案设计核心 |
-| ⭐⭐⭐ | skills/review/SKILL.md | 质量门 |
-| ⭐⭐ | quality-gates/four-dimensions.md | 评分标准 |
-| ⭐⭐ | quality-gates/evidence-chain.md | 证据链规范 |
-| ⭐⭐ | experts/<your-domain>.md | 你常用领域的专家 |
-| ⭐ | examples/L2-business-plan.md | 完整示例 |
-
-按需取舍。
+4. 在 Project 内开新对话即可使用
 
 ## 验证
 
 1. 在 Claude Project 内开新对话
 2. 提任意问题
-3. AI 应进入 UEE 流程
+3. AI 应按 UEE 流程响应
 
 ## Claude 优势
 
@@ -85,25 +68,18 @@ Claude Projects 的 Knowledge 文件数量有限（视订阅版本，通常 5-30
 
 - 无终端 → 不能跑命令
 - 无文件系统 → deliver 用 Artifacts 输出
-- Knowledge 文件数有上限
+- Knowledge 文件数有上限（视订阅版本）
 
 ## 升级 UEE
 
 ```bash
-cd /path/to/uee
+cd ~/.uee
 git pull origin main
 
-# Project Instructions 需要手动重新粘贴
-# macOS
-cat entry.md | pbcopy
-# Linux
-cat entry.md | xclip -selection clipboard
-# Windows
-cat entry.md | clip
-
+# 重新粘贴 Instructions
+cat ~/.uee/entry.md | pbcopy
 # 进入 Claude Project → Edit Instructions
-
-# Knowledge 文件如有变化，删除旧的重新上传
+# 已上传的 Knowledge 文件如有变化，删除旧的重新上传
 ```
 
 ## 文件组织规则

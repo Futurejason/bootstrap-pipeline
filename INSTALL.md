@@ -1,319 +1,243 @@
 # UEE 安装指南
 
-> 本文档介绍：在新机器/新平台上从 git 克隆本仓库后，如何激活 Universal Expert Engine。
+> 在你自己的项目里激活 Universal Expert Engine。
 
-## 第 1 步：克隆仓库
+## 概念
+
+UEE 是工具，你的项目是宿主。安装的本质是：在你的项目里写一个小配置文件（如 `.cursorrules`），告诉 AI 工具按 UEE 流程工作。
+
+## 第 1 步：下载 UEE（一次性）
 
 ```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
+# 默认装到 ~/.uee
+git clone https://github.com/Futurejason/bootstrap-pipeline.git ~/.uee
+
+# 或装到任意位置
+git clone https://github.com/Futurejason/bootstrap-pipeline.git /your/path/uee
 ```
 
-之后所有命令都在 `uee/` 目录下执行。
+UEE 仓库本身只是源文件，不需要安装到系统。`install.sh` 会从这个目录引用或复制内容。
 
-## 第 2 步：选择你的平台
+## 第 2 步：在你的项目里激活
 
-选择你要使用的 AI 平台，按对应步骤操作：
-
-| 平台 | 类型 | 操作复杂度 | 跳转 |
-|------|------|----------|------|
-| Kiro | IDE，有文件系统，支持文件引用 | ⭐ | [→ Kiro](#kiro) |
-| Claude Code | CLI，有终端，支持文件读取 | ⭐ | [→ Claude Code](#claude-code) |
-| Cursor | IDE，支持 .cursorrules 单文件 | ⭐⭐ | [→ Cursor](#cursor) |
-| Windsurf | IDE，支持 .windsurfrules 单文件 | ⭐⭐ | [→ Windsurf](#windsurf) |
-| ChatGPT / GPTs | Web，仅 Instructions 字段 | ⭐⭐⭐ | [→ ChatGPT](#chatgpt) |
-| Claude Projects | Web，支持 Knowledge 上传 | ⭐⭐ | [→ Claude](#claude-projects) |
-
-或使用一键脚本：
+进入你的项目目录，运行 install.sh：
 
 ```bash
-./setup.sh
+cd ~/projects/my-app
+~/.uee/install.sh
 ```
 
-脚本会自动检测你的环境并配置。
+脚本会：
+1. 自动检测当前项目可用的平台（Kiro/Cursor/Windsurf/Claude Code）
+2. 在你的项目里生成对应的配置文件
+3. 给出每个平台的下一步操作（如"重启 IDE"）
 
----
+## 安装选项
 
-## Kiro
-
-### 适用条件
-- 已安装 Kiro IDE
-- 想把 UEE 用在某个项目里
-
-### 步骤
-
-1. **决定要在哪个项目使用 UEE**
-
-   情况 A：直接在 UEE 仓库里使用 → 跳到第 2 步
-
-   情况 B：在另一个项目使用 → 把 UEE 克隆到那个项目内：
-   ```bash
-   cd /path/to/your-other-project
-   git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-   ```
-
-2. **创建 steering 文件**
-
-   在项目根目录创建 `.kiro/steering/uee.md`：
-
-   ```bash
-   mkdir -p .kiro/steering
-   cat > .kiro/steering/uee.md << 'EOF'
-   ---
-   inclusion: auto
-   ---
-
-   # Universal Expert Engine
-
-   #[[file:../../entry.md]]
-   #[[file:../../ETHOS.md]]
-   #[[file:../../orchestrator/ORCHESTRATOR.md]]
-   #[[file:../../orchestrator/routing-rules.md]]
-   #[[file:../../quality-gates/four-dimensions.md]]
-   #[[file:../../quality-gates/evidence-chain.md]]
-   #[[file:../../skills/classify/SKILL.md]]
-   #[[file:../../skills/clarify/SKILL.md]]
-   #[[file:../../skills/resource/SKILL.md]]
-   #[[file:../../skills/plan/SKILL.md]]
-   #[[file:../../skills/design/SKILL.md]]
-   #[[file:../../skills/execute/SKILL.md]]
-   #[[file:../../skills/review/SKILL.md]]
-   #[[file:../../skills/deliver/SKILL.md]]
-   #[[file:../../skills/refine/SKILL.md]]
-   EOF
-   ```
-
-   > 路径 `../../` 从 `.kiro/steering/` 出发，向上 2 级到 UEE 仓库根。
-   > **如果 UEE 是放在你项目子目录（不是直接在 UEE 仓库工作）**，把 `../../` 改成 `../../uee/`（假设子目录名为 uee）。
-
-3. **重启 Kiro 窗口**（让 steering 生效）
-
-4. **验证**：在 Kiro chat 里输入任意问题，AI 应该按 UEE 流程响应（先 classify，再 clarify ...）。
-
-### 单仓库模式
-**直接 clone UEE 后在仓库内使用**：用上面的写法（`../../`）即可。
-
-**在你的项目里嵌套使用 UEE**（推荐做法是建议用户自己 clone 一份）：
-- 在你的项目根 clone：`git clone ... uee`
-- steering 文件路径改成 `../../uee/...`
-
----
-
-## Claude Code
-
-### 适用条件
-- 已安装 Claude Code CLI
-- 项目有终端能力
-
-### 步骤
-
-1. **进入项目目录**（可以是 UEE 仓库或你自己的项目）：
-   ```bash
-   cd /path/to/your-project
-   ```
-
-2. **复制 entry.md 到 CLAUDE.md**：
-
-   情况 A：直接用 UEE 仓库
-   ```bash
-   cp entry.md CLAUDE.md
-   echo "" >> CLAUDE.md
-   echo "## 引用文件（按需加载）" >> CLAUDE.md
-   echo "" >> CLAUDE.md
-   echo "完整规则：见 ETHOS.md / ARCHITECTURE.md / skills/*/SKILL.md / experts/*.md" >> CLAUDE.md
-   ```
-
-   情况 B：在另一个项目使用 UEE，先克隆：
-   ```bash
-   git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-   cp uee/entry.md CLAUDE.md
-   ```
-
-3. **启动 Claude Code**：
-   ```bash
-   claude
-   ```
-
-   `CLAUDE.md` 会自动加载。
-
-4. **验证**：随便问一个问题，AI 应该走 UEE 流程。
-
----
-
-## Cursor
-
-### 适用条件
-- 已安装 Cursor IDE
-
-### 步骤
-
-1. **打开你的项目**（可以是 UEE 仓库或你自己的项目）
-
-2. **生成 `.cursorrules`**：
-
-   ```bash
-   # 如果在 UEE 仓库内
-   cp entry.md .cursorrules
-
-   # 如果在其他项目，先克隆 UEE 再复制
-   git clone https://github.com/Futurejason/bootstrap-pipeline.git /tmp/uee
-   cp /tmp/uee/entry.md .cursorrules
-   ```
-
-3. **重启 Cursor** 让规则生效
-
-4. **验证**：用 Cmd+L 提问，AI 应按 UEE 流程响应
-
-### 进阶：附加常用 skill
-
-Cursor 不支持 `#[[file:]]` 引用，但可以把核心 skill 拼到 .cursorrules 末尾：
+### 全局模式（默认，推荐）
 
 ```bash
-cat entry.md > .cursorrules
-echo "" >> .cursorrules
-echo "---" >> .cursorrules
-cat skills/classify/SKILL.md >> .cursorrules
-cat skills/clarify/SKILL.md >> .cursorrules
-cat skills/plan/SKILL.md >> .cursorrules
-cat skills/review/SKILL.md >> .cursorrules
-cat quality-gates/four-dimensions.md >> .cursorrules
+~/.uee/install.sh
 ```
 
----
+行为：在你项目里只生成轻量配置文件，文件内容引用全局 UEE 仓库（`~/.uee`）。
 
-## Windsurf
+适合：希望 UEE 升级时所有项目自动跟进。
 
-### 适用条件
-- 已安装 Windsurf IDE
+注意：把项目复制到没有 UEE 的另一台机器时，需要先安装 UEE。
 
-### 步骤
-
-操作同 Cursor，把 `.cursorrules` 改成 `.windsurfrules`：
+### 局部模式
 
 ```bash
-cp entry.md .windsurfrules
+~/.uee/install.sh --local
 ```
 
----
+行为：把 UEE 整个复制到你项目里的 `.uee/` 子目录。
 
-## ChatGPT
+适合：希望项目自包含、可移植。
 
-### 适用条件
-- 已订阅 ChatGPT Plus（创建 GPTs 需要）
-- 或用普通对话模式
+注意：UEE 升级时需要重新跑 `~/.uee/install.sh --local` 才能更新到项目里的副本。
 
-### 方式 A：创建自定义 GPT（推荐）
-
-1. 进入 ChatGPT → Explore GPTs → Create
-2. 在「Instructions」字段粘贴 `entry.md` 全部内容（约 8000 字符以内）
-
-   如果需要 Instructions 内容：
-   ```bash
-   # macOS
-   cat entry.md | pbcopy
-
-   # Linux
-   cat entry.md | xclip -selection clipboard
-
-   # Windows (Git Bash)
-   cat entry.md | clip
-   ```
-
-3. 配置：
-   - Name: `Universal Expert Engine`
-   - Description: `全能行业专家引擎`
-   - Capabilities: 按需开启 Web Browsing / Code Interpreter
-
-4. **验证**：在新对话提问，AI 应按 UEE 流程响应
-
-### 方式 B：普通对话注入
-
-每次新对话开头粘贴 `entry.md` 内容作为系统提示。
-
-### 限制
-
-- ChatGPT GPTs Instructions 长度限制约 8000 字符
-- 如超出，仅保留 entry.md 的「引擎核心」段（删除「平台自动检测」和「完整能力树」段）
-
----
-
-## Claude Projects
-
-### 适用条件
-- Claude.ai 账号
-
-### 步骤
-
-1. **创建 Claude Project**：
-   - Claude → Projects → New Project
-
-2. **设置 Project Instructions**：
-   - 把 `entry.md` 内容粘贴进去
-
-3. **上传 Knowledge 文件**（可选但推荐）：
-   - 上传：`ETHOS.md`、`skills/` 下所有 SKILL.md、`experts/` 下所有专家身份
-   - Claude 会自动读取这些文件回答
-
-4. **验证**：在 Project 内开新对话提问
-
-### 限制
-- Knowledge 文件数有上限（视订阅版本）
-- 无文件系统 → 用 Artifacts 输出长内容
-
----
-
-## 通用问题
-
-### Q: 我已经在用，但想升级 UEE 到最新版？
+### 指定 UEE 仓库位置
 
 ```bash
-cd /path/to/uee
+~/.uee/install.sh --uee-dir=/path/to/uee
+```
+
+如果 UEE 不在 `~/.uee`，用这个参数指定。脚本本身在 UEE 仓库里，所以默认会用脚本所在的目录作为 UEE 根。
+
+### 指定目标项目
+
+```bash
+~/.uee/install.sh --target=/path/to/my-app
+```
+
+如果不想在当前目录激活，用这个参数指定目标项目。
+
+### 仅配置某个平台
+
+```bash
+~/.uee/install.sh --platform=cursor
+~/.uee/install.sh --platform=kiro --platform=cursor   # 多个
+```
+
+不写则自动检测，写了就只配置指定的平台。可选值：
+- `kiro`
+- `cursor`
+- `windsurf`
+- `claude-code`
+
+### 帮助
+
+```bash
+~/.uee/install.sh --help
+```
+
+## 平台说明
+
+### 自动可处理（4 个）
+
+| 平台 | 特征 | 生成文件 |
+|------|------|---------|
+| Kiro | 项目里有 `.kiro/` 目录 | `.kiro/steering/uee.md` |
+| Cursor | 系统装了 `cursor` 命令 | `.cursorrules` |
+| Windsurf | 系统装了 `windsurf` 命令 | `.windsurfrules` |
+| Claude Code | 系统装了 `claude` 命令 | `CLAUDE.md` |
+
+### 需要手动配置（Web 平台）
+
+| 平台 | 配置位置 |
+|------|---------|
+| ChatGPT GPTs | Instructions 字段 |
+| Claude Projects | Project Instructions |
+
+复制 entry.md 到剪贴板：
+
+```bash
+# macOS
+cat ~/.uee/entry.md | pbcopy
+
+# Linux
+cat ~/.uee/entry.md | xclip -selection clipboard
+
+# Windows (Git Bash)
+cat ~/.uee/entry.md | clip
+```
+
+然后到对应 Web 平台粘贴。
+
+## 第 3 步：验证生效
+
+激活后，重启你的 IDE，提任意问题。AI 应该：
+
+1. 输出 `[classify]` 阶段标记
+2. 关键论断带 `【论断】【论据】【来源】【可信度】` 标注
+3. 在 P1/P2/P4 节点暂停等待用户
+
+如果 AI 直接回答没有上述结构：
+
+| 症状 | 检查 |
+|------|------|
+| Cursor 没生效 | 重启 Cursor；确认 `.cursorrules` 在项目根 |
+| Kiro 没生效 | 重启 Kiro；查看 `.kiro/steering/uee.md` 路径是否对 |
+| Claude Code 没生效 | 重启 `claude` 命令；CLAUDE.md 在当前目录 |
+
+## 卸载
+
+```bash
+cd ~/projects/my-app
+~/.uee/uninstall.sh
+```
+
+或：
+
+```bash
+~/.uee/uninstall.sh --target=/path/to/my-app
+```
+
+会扫描目标项目，**仅删除**含 `<!-- UEE-MANAGED -->` 标记的文件，不会动你自己写的：
+
+- `.cursorrules`
+- `.windsurfrules`
+- `CLAUDE.md`
+- `.kiro/steering/uee.md`
+- `.uee/`（局部模式产生的目录）
+
+如有 `.bak` 备份（说明你有原配置被 UEE 备份过），会提示是否恢复。
+
+## 升级 UEE
+
+```bash
+cd ~/.uee
 git pull origin main
 ```
 
-各平台的配置文件（如 `.cursorrules`、`CLAUDE.md`）需要重新生成：
+后续：
+- **全局模式**：所有项目自动跟进，不需要重新 install
+- **局部模式**：每个使用了局部模式的项目需要重新 `~/.uee/install.sh --local`
 
+## 故障排查
+
+### Q: 脚本报"UEE 仓库不存在"
+确认 `~/.uee/entry.md` 存在。如果你装在别处，用 `--uee-dir=`。
+
+### Q: 想换 UEE 安装位置
 ```bash
-cp entry.md .cursorrules        # 或 CLAUDE.md / .windsurfrules
+mv ~/.uee /new/path/uee
+# 各项目重新 install 一次
+cd ~/projects/my-app
+/new/path/uee/install.sh
 ```
 
-ChatGPT/Claude Projects 需要手动重新粘贴 Instructions。
+### Q: install 后 AI 还是不按 UEE 流程
+检查清单：
+- [ ] IDE 已重启？
+- [ ] 配置文件存在？（`ls -la` 看下）
+- [ ] 配置文件含 `<!-- UEE-MANAGED -->` 标记？
+- [ ] 配置文件指向的路径有效？（cat 看下）
 
-### Q: 怎么验证 UEE 真的生效了？
+### Q: 我项目里已经有 .cursorrules 怎么办
+install.sh 会自动备份成 `.cursorrules.bak`，然后写入 UEE 内容。卸载时会提示是否恢复备份。
 
-提问任意问题，AI 应该：
-1. 不直接回答，而是先输出 `[classify] domain=... complexity=...`
-2. 或在 clarify 阶段提交 P1 决策简报
-3. 关键论断带 `【论断】【论据】【来源】【可信度】` 三元组
+### Q: 多个项目要不要每个都装一次
+是的。但如果用全局模式，每个项目只是写个轻量配置文件，UEE 本体只装一次。
 
-如果 AI 直接回答没有上述结构，说明 UEE 没生效。检查：
-- 配置文件路径是否正确
-- IDE 是否已重启
-- 文件引用路径是否正确（特别是 Kiro 的相对路径）
+### Q: 想在 CI 里自动化
+```bash
+~/.uee/install.sh --target=$REPO_DIR --platform=cursor   # 跳过交互
+```
 
-### Q: 想关闭 UEE？
+如果脚本检测不到平台又没指定 `--platform`，会进入交互菜单。CI 中务必指定 `--platform`。
 
-- Kiro: 把 `.kiro/steering/uee.md` 顶部 `inclusion: auto` 改成 `inclusion: manual`（之后用 `#uee` 手动触发），或直接删除该文件
-- Cursor / Windsurf: 删除 `.cursorrules` / `.windsurfrules`
-- Claude Code: 删除 `CLAUDE.md`
-- ChatGPT GPTs: 切换到普通 ChatGPT
-- Claude Projects: 在普通对话框聊天
+## 几个常见配置
 
-### Q: 想只用某个 skill，不走完整流程？
+### 团队共享 UEE 配置（推荐做法）
 
-明确告诉 AI 用哪个 skill，例如：
-- "用 review skill 检查这份文档"
-- "调用 classify 判断复杂度就行"
-- "直接给我方案对比（plan skill）"
+仓库内提交 UEE 配置文件，团队成员只需 clone 仓库即可：
 
----
+```bash
+# 团队管理员一次性
+cd ~/team-project
+~/.uee/install.sh --local                  # 局部模式，UEE 入仓
+git add .uee/ .cursorrules CLAUDE.md
+git commit -m "chore: enable UEE for team"
+git push
 
-## 部署后检查清单
+# 团队成员
+git clone <repo>
+# 直接打开 IDE 即可，UEE 已嵌在仓库里
+```
 
-每个平台部署完后建议跑一遍：
+### 仅单平台使用
 
-- [ ] 启动/重启 IDE 或新开对话
-- [ ] 提问简单问题（"Hello"），AI 应进入 classify
-- [ ] 提问复杂问题（"帮我设计 X"），AI 应识别为 L2/L3
-- [ ] 验证 P1/P2 用户介入点正常触发
-- [ ] 验证 deliver 输出包含质量报告 + 证据链
+```bash
+~/.uee/install.sh --platform=cursor
+```
+
+### 多个项目批量激活
+
+```bash
+for proj in ~/projects/*/; do
+  ~/.uee/install.sh --target="$proj"
+done
+```

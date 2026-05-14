@@ -7,145 +7,98 @@
 - 支持 specs（结构化需求文档）
 - 内置 task 工具链
 
-## 从 git 克隆后的安装步骤
+## 在你的项目里激活 UEE
 
-### 场景 1：直接在 UEE 仓库内使用
+### 推荐方式：用 install.sh
 
 ```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
+# 进入你自己的项目
+cd ~/projects/my-app
 
-# 一键安装
-./setup.sh
+# 激活（自动检测平台）
+~/.uee/install.sh
 
-# 或手动配置
+# 或仅配置 Kiro
+~/.uee/install.sh --platform=kiro
+```
+
+脚本会自动：
+1. 创建 `.kiro/steering/uee.md`
+2. 计算从 steering 出发到 UEE 仓库的相对路径
+3. 写入 `#[[file:...]]` 引用
+
+### 手动方式
+
+```bash
+cd ~/projects/my-app
 mkdir -p .kiro/steering
+
 cat > .kiro/steering/uee.md << 'EOF'
 ---
 inclusion: auto
 ---
 
+<!-- UEE-MANAGED -->
 # Universal Expert Engine
 
-#[[file:../../entry.md]]
-#[[file:../../ETHOS.md]]
-#[[file:../../orchestrator/ORCHESTRATOR.md]]
-#[[file:../../orchestrator/routing-rules.md]]
-#[[file:../../quality-gates/four-dimensions.md]]
-#[[file:../../quality-gates/evidence-chain.md]]
-#[[file:../../skills/classify/SKILL.md]]
-#[[file:../../skills/clarify/SKILL.md]]
-#[[file:../../skills/resource/SKILL.md]]
-#[[file:../../skills/plan/SKILL.md]]
-#[[file:../../skills/design/SKILL.md]]
-#[[file:../../skills/execute/SKILL.md]]
-#[[file:../../skills/review/SKILL.md]]
-#[[file:../../skills/deliver/SKILL.md]]
-#[[file:../../skills/refine/SKILL.md]]
+#[[file:绝对路径或相对路径/entry.md]]
+#[[file:绝对路径或相对路径/ETHOS.md]]
+... 其他文件
 EOF
 ```
 
-### 场景 2：在你自己的项目里使用 UEE
+注意：相对路径要从 `.kiro/steering/` 出发计算。手动写易出错，建议用 `install.sh` 自动算。
 
-```bash
-# 在你的项目根目录
-cd /path/to/your-project
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
+## 验证
 
-# 一键安装（从 UEE 仓库执行，target 是你的项目）
-./uee/setup.sh "$(pwd)"
-```
+1. 重启 Kiro
+2. 在 chat 输入 "你好"
+3. AI 应输出 `[classify] domain=... complexity=...` 而不是直接回答
 
-或手动：
-
-```bash
-mkdir -p .kiro/steering
-cat > .kiro/steering/uee.md << 'EOF'
----
-inclusion: auto
----
-
-# Universal Expert Engine
-
-#[[file:../../uee/entry.md]]
-#[[file:../../uee/ETHOS.md]]
-#[[file:../../uee/orchestrator/ORCHESTRATOR.md]]
-#[[file:../../uee/orchestrator/routing-rules.md]]
-#[[file:../../uee/quality-gates/four-dimensions.md]]
-#[[file:../../uee/quality-gates/evidence-chain.md]]
-#[[file:../../uee/skills/classify/SKILL.md]]
-#[[file:../../uee/skills/clarify/SKILL.md]]
-#[[file:../../uee/skills/resource/SKILL.md]]
-#[[file:../../uee/skills/plan/SKILL.md]]
-#[[file:../../uee/skills/design/SKILL.md]]
-#[[file:../../uee/skills/execute/SKILL.md]]
-#[[file:../../uee/skills/review/SKILL.md]]
-#[[file:../../uee/skills/deliver/SKILL.md]]
-#[[file:../../uee/skills/refine/SKILL.md]]
-EOF
-```
-
-### 场景 3：手动指定按需引用（manual 模式）
-
-如果不想自动加载，改成手动触发：
-
-```bash
-mkdir -p .kiro/skills
-cat > .kiro/skills/uee.md << 'EOF'
----
-inclusion: manual
----
-
-# UEE — 按需引用
-
-通过 `#uee` 触发引擎。
-
-#[[file:../../uee/entry.md]]
-EOF
-```
-
-之后在 chat 里用 `#uee` 触发。
-
-## 第 3 步：验证
-
-1. 重启 Kiro 窗口（让 steering 生效）
-2. 在 chat 里输入 "你好" 或任意问题
-3. AI 应该按 UEE 流程响应：
-   - 先输出 `[classify] domain=... complexity=...`
-   - 再进入 clarify 阶段（如有不确定项触发 P1）
-
-如果 AI 直接回答没走流程，检查：
-- steering 文件路径相对路径是否对（从 `.kiro/steering/` 出发）
-- 文件引用语法是否是 `#[[file:...]]`
+如果没生效：
+- 检查 `.kiro/steering/uee.md` 存在
+- 检查里面的 `#[[file:]]` 路径是否能找到 entry.md
 - Kiro 是否已重启
+
+## 局部 vs 全局模式（Kiro 特有的优势）
+
+Kiro 的文件引用机制让两种模式效果几乎一致，但有微小差异：
+
+| 模式 | steering 路径 | UEE 升级 | 项目可移植性 |
+|------|--------------|---------|-------------|
+| 全局 | 指向 `~/.uee/entry.md` | 自动跟进 | 需要目标机器有 `~/.uee` |
+| 局部 | 指向 `.uee/entry.md` | 需重新 install | 完全可移植 |
 
 ## Kiro 特有能力利用
 
 ### 1. task_list / task_update 工具
-L3 流程的多模块执行可拆成 task：
-- execute skill 内部把模块拆成 task list
-- 用 task_list 工具创建任务
-- 逐个 task_update 推进
+L3 流程的多模块执行可拆成 task。
 
 ### 2. invoke_sub_agent
-复杂子任务委托：
-- plan 中的研究 → context-gatherer sub-agent
-- 完整子任务 → general-task-execution sub-agent
+复杂子任务委托给 sub-agent。
 
 ### 3. user_input 工具
-P1/P2/P3/P4 决策点用 `user_input` 工具，提供结构化选项。
-
-## 文件组织规则
-
-按 ETHOS 规则，每个新任务的产出放在独立 kebab-case 目录：
-- 任务文件夹与 .kiro 同级
-- 内部 docs/ src/ tests/ 按需
+P1/P2/P3/P4 决策点用结构化选项。
 
 ## 升级 UEE
 
 ```bash
-cd /path/to/uee
+cd ~/.uee
 git pull origin main
 ```
 
-steering 文件不需要改（用的相对路径）。
+全局模式下 Kiro steering 自动跟进（用的相对/绝对路径都指向 ~/.uee）。
+局部模式需重新跑 `install.sh --local`。
+
+## 卸载
+
+```bash
+cd ~/projects/my-app
+~/.uee/uninstall.sh --platform=kiro
+```
+
+会清理 `.kiro/steering/uee.md`，如果 `.kiro/steering/` 空了一并删除。
+
+## 文件组织规则
+
+按 ETHOS 规则，每个新任务的产出放在独立 kebab-case 目录。

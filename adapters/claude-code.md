@@ -6,54 +6,52 @@
 - 完整终端能力
 - 文件读写可用
 
-## 从 git 克隆后的安装步骤
+## 在你的项目里激活 UEE
 
-### 场景 1：直接在 UEE 仓库内使用
+### 推荐方式：用 install.sh
 
 ```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
-
-# 一键
-./setup.sh
-
-# 或手动：把 entry.md 复制为 CLAUDE.md
-cp entry.md CLAUDE.md
+cd ~/projects/my-app
+~/.uee/install.sh
+# 或仅 Claude Code
+~/.uee/install.sh --platform=claude-code
 ```
 
-启动：
+会在你的项目里生成 `CLAUDE.md`（已存在的会备份为 `CLAUDE.md.bak`）。
+
+### 启动 Claude Code
 
 ```bash
+cd ~/projects/my-app   # 必须在项目目录里启动
 claude
 ```
 
-### 场景 2：在你的项目里使用
+`CLAUDE.md` 会自动加载。
+
+### 手动方式
 
 ```bash
-cd /path/to/your-project
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cp uee/entry.md CLAUDE.md
-claude
+cd ~/projects/my-app
+
+# 直接复制 entry.md
+cp ~/.uee/entry.md CLAUDE.md
 ```
 
-### 场景 3：希望 CLAUDE.md 同时引用 UEE 详细文件
+### 让 CLAUDE.md 引用 UEE 详细文件（高级）
+
+如果你希望 Claude Code 能按需读取 UEE 的所有 SKILL 详细规则：
 
 ```bash
-cp uee/entry.md CLAUDE.md
-cat >> CLAUDE.md << 'EOF'
+cat ~/.uee/entry.md > CLAUDE.md
+cat >> CLAUDE.md << EOF
 
 ## 详细规则参考
 
 需要更细的规则时，按需读取以下文件：
-
-- 行为准则：uee/ETHOS.md
-- 编排逻辑：uee/orchestrator/ORCHESTRATOR.md
-- 路由规则：uee/orchestrator/routing-rules.md
-- 四维评分：uee/quality-gates/four-dimensions.md
-- 证据链：uee/quality-gates/evidence-chain.md
-- 单 Skill 详情：uee/skills/<skill-name>/SKILL.md
-- 专家身份：uee/experts/<expert-name>.md
-- 模板：uee/templates/
+- 行为准则：~/.uee/ETHOS.md
+- 编排：~/.uee/orchestrator/ORCHESTRATOR.md
+- 单 Skill：~/.uee/skills/<skill-name>/SKILL.md
+- 专家身份：~/.uee/experts/<expert-name>.md
 EOF
 ```
 
@@ -62,16 +60,11 @@ Claude Code 会按需读取这些文件。
 ## 验证
 
 ```bash
-# 启动 Claude Code
+cd ~/projects/my-app
 claude
 
-# 在 chat 里随便问一个问题
-# AI 应该按 UEE 流程响应（先 classify ...）
+# 提任意问题，AI 应按 UEE 流程响应
 ```
-
-如果没生效：
-- 确认 CLAUDE.md 在当前工作目录
-- 确认 entry.md 内容已正确复制（`head -20 CLAUDE.md` 应能看到 UEE 标题）
 
 ## Claude Code 特有能力利用
 
@@ -92,14 +85,21 @@ execute skill 可直接跑：
 ## 升级 UEE
 
 ```bash
-cd /path/to/uee
+cd ~/.uee
 git pull origin main
 
-# 你的项目里需要重新生成 CLAUDE.md
-cd /path/to/your-project
-cp uee/entry.md CLAUDE.md
+# 各项目重新激活
+cd ~/projects/my-app
+~/.uee/install.sh --platform=claude-code
+```
+
+## 卸载
+
+```bash
+cd ~/projects/my-app
+~/.uee/uninstall.sh --platform=claude-code
 ```
 
 ## 文件组织规则
 
-按 ETHOS 规则。Claude Code 终端可创建独立项目文件夹。
+按 ETHOS 规则，可创建独立项目子目录。Claude Code 终端可执行 `mkdir`。

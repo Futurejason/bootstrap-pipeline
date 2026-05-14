@@ -19,3 +19,4 @@ system-prompt.md
 node_modules/
 .venv/
 __pycache__/
+.test-records/

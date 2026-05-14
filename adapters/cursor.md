@@ -6,75 +6,47 @@
 - 支持 Settings → Rules for AI 配置
 - 终端 + 文件读写可用
 
-## 从 git 克隆后的安装步骤
+## 在你的项目里激活 UEE
 
-### 场景 1：直接在 UEE 仓库内使用
-
-```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
-
-# 一键
-./setup.sh
-
-# 或手动
-cp entry.md .cursorrules
-```
-
-打开 Cursor → Open Folder → 选择 uee 目录。
-
-### 场景 2：在你的项目里使用
+### 推荐方式：用 install.sh
 
 ```bash
-cd /path/to/your-project
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cp uee/entry.md .cursorrules
+# 进入你自己的项目
+cd ~/projects/my-app
+
+# 激活（自动检测平台，会自动配置 Cursor）
+~/.uee/install.sh
+
+# 或仅配置 Cursor
+~/.uee/install.sh --platform=cursor
 ```
 
-### 场景 3：附加常用 skill 到 .cursorrules
+脚本会：
+1. 在你的项目里生成 `.cursorrules`（含 `<!-- UEE-MANAGED -->` 标记）
+2. 如果你已有 `.cursorrules`，先备份为 `.cursorrules.bak`
 
-Cursor 不支持文件引用，但可拼接：
+### 手动方式
 
 ```bash
-cat uee/entry.md > .cursorrules
-echo "" >> .cursorrules
-echo "---" >> .cursorrules
-echo "" >> .cursorrules
-cat uee/skills/classify/SKILL.md >> .cursorrules
-cat uee/skills/clarify/SKILL.md >> .cursorrules
-cat uee/skills/plan/SKILL.md >> .cursorrules
-cat uee/skills/review/SKILL.md >> .cursorrules
-cat uee/quality-gates/four-dimensions.md >> .cursorrules
+cd ~/projects/my-app
+
+# 全局引用（依赖 ~/.uee 仓库）
+cp ~/.uee/entry.md .cursorrules
+
+# 或局部嵌入（项目自包含）
+cp -r ~/.uee/{entry.md,ETHOS.md,skills,orchestrator,experts,quality-gates,templates} .uee/
+cp .uee/entry.md .cursorrules
 ```
-
-注意：`.cursorrules` 太大可能影响响应速度，按需选择。
-
-### 场景 4：全局配置（所有项目都生效）
-
-打开 Cursor → Settings → Rules for AI → 粘贴 entry.md 内容。
-
-```bash
-# macOS
-cat uee/entry.md | pbcopy
-
-# Linux
-cat uee/entry.md | xclip -selection clipboard
-
-# Windows (Git Bash)
-cat uee/entry.md | clip
-```
-
-然后在 Cursor 设置中粘贴即可。
 
 ## 验证
 
 1. 重启 Cursor
 2. 用 Cmd+L 打开 chat，提问"你好"
-3. AI 应进入 UEE 流程
+3. AI 应进入 UEE 流程（先 classify）
 
 如果没生效：
 - 检查 `.cursorrules` 在项目根目录
-- 文件内容用 `head -20 .cursorrules` 确认
+- 文件内容用 `head -3 .cursorrules` 应能看到 `<!-- UEE-MANAGED -->`
 - 重启 Cursor
 
 ## Cursor 特有能力利用
@@ -93,11 +65,24 @@ cat uee/entry.md | clip
 ## 升级 UEE
 
 ```bash
-cd /path/to/uee
+# 升级 UEE 仓库本身
+cd ~/.uee
 git pull origin main
-cd /path/to/your-project
-cp uee/entry.md .cursorrules   # 重新生成
+
+# 全局模式：项目里的 .cursorrules 内容是 entry.md 的副本
+# 由于不是引用而是副本，需要重新跑 install 拉新版
+cd ~/projects/my-app
+~/.uee/install.sh --platform=cursor
 ```
+
+## 卸载
+
+```bash
+cd ~/projects/my-app
+~/.uee/uninstall.sh --platform=cursor
+```
+
+只删 UEE 写入的 `.cursorrules`，如有 `.bak` 备份会询问恢复。
 
 ## 文件组织规则
 

@@ -6,37 +6,24 @@
 - 类似 Cursor 体验
 - 终端可用
 
-## 从 git 克隆后的安装步骤
+## 在你的项目里激活 UEE
 
-### 场景 1：直接在 UEE 仓库内使用
+### 推荐方式：用 install.sh
 
 ```bash
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cd uee
-
-# 一键
-./setup.sh
-
-# 或手动
-cp entry.md .windsurfrules
+cd ~/projects/my-app
+~/.uee/install.sh
+# 或仅 Windsurf
+~/.uee/install.sh --platform=windsurf
 ```
 
-### 场景 2：在你的项目里使用
+脚本会在你的项目里生成 `.windsurfrules`（已存在的会备份为 `.bak`）。
+
+### 手动方式
 
 ```bash
-cd /path/to/your-project
-git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
-cp uee/entry.md .windsurfrules
-```
-
-### 场景 3：附加常用 skill
-
-```bash
-cat uee/entry.md > .windsurfrules
-echo "" >> .windsurfrules
-cat uee/skills/classify/SKILL.md >> .windsurfrules
-cat uee/skills/plan/SKILL.md >> .windsurfrules
-cat uee/skills/review/SKILL.md >> .windsurfrules
+cd ~/projects/my-app
+cp ~/.uee/entry.md .windsurfrules
 ```
 
 ## 验证
@@ -48,12 +35,20 @@ cat uee/skills/review/SKILL.md >> .windsurfrules
 ## 升级 UEE
 
 ```bash
-cd /path/to/uee
+cd ~/.uee
 git pull origin main
-cd /path/to/your-project
-cp uee/entry.md .windsurfrules
+
+cd ~/projects/my-app
+~/.uee/install.sh --platform=windsurf
+```
+
+## 卸载
+
+```bash
+cd ~/projects/my-app
+~/.uee/uninstall.sh --platform=windsurf
 ```
 
 ## 文件组织规则
 
-同 Cursor，按 ETHOS 规则。
+按 ETHOS 规则，新任务产出放独立目录。

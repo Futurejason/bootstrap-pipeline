@@ -3,50 +3,110 @@
 ## 平台特性
 
 - 通过 GPTs 的 Instructions 加载规则
-- 单文件、长度有限
-- 不支持文件引用
+- 单文件、长度有限（约 8000 字符）
+- 不支持本地文件引用
 - 无终端能力（除非用 Code Interpreter）
 
-## 加载方式
+## 从 git 克隆后的使用步骤
 
-### 方式 1：创建自定义 GPT（推荐）
+由于 ChatGPT 是 Web 平台，"克隆 git 仓库"的意义在于**本地有源文件**，方便复制粘贴到 ChatGPT。
+
+### 步骤 1：克隆仓库（在本地）
+
+```bash
+git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
+cd uee
+```
+
+### 步骤 2：复制 entry.md 内容
+
+```bash
+# macOS
+cat entry.md | pbcopy
+
+# Linux
+cat entry.md | xclip -selection clipboard
+
+# Windows (Git Bash)
+cat entry.md | clip
+```
+
+### 步骤 3a：创建 GPT（推荐）
 
 1. 进入 ChatGPT → Explore GPTs → Create
-2. Instructions 字段粘贴 `entry.md` 全部内容
-3. Name: "Universal Expert Engine"
-4. Description: "全能行业专家引擎"
-5. （可选）上传 `experts/` 下的专家身份文件作为 Knowledge
+2. 在 Configure → Instructions 字段粘贴（Cmd+V / Ctrl+V）
+3. 配置：
+   - Name: `Universal Expert Engine`
+   - Description: `全能行业专家引擎`
+   - Capabilities: 按需开启 Web Browsing / Code Interpreter
+4. Save → 在新对话使用
 
-### 方式 2：常规对话注入
+### 步骤 3b：普通对话注入
 
-在新对话开头粘贴 `entry.md` 内容作为系统提示。
+每次新对话开头粘贴 entry.md 内容作为系统提示。
 
-## ChatGPT 限制
+## Instructions 长度处理
 
-### Instructions 长度限制
-ChatGPT GPTs 的 Instructions 约 8000 字符。需要精简。
+ChatGPT GPTs Instructions 约 8000 字符。如果 entry.md 超长：
 
-### 解决方案
-仅加载 `entry.md` 的引擎核心部分（不含完整能力树）。能力子集如下：
-- classify / clarify / plan / execute / review / deliver 的核心逻辑（简化版）
-- 不加载 design 和 refine 的详细规范（按需简述）
+```bash
+# 截取核心部分（删除"完整能力树"段）
+sed '/^# 完整能力树/,$d' entry.md | pbcopy
+```
 
-### 文件系统能力
-- 无终端 → 无法创建项目目录
-- 解决：deliver 时输出完整 markdown 内容，让用户手动保存
+或保留：
+- 平台自动检测段
+- 引擎核心段
+- 9 个 Skill 描述
+- 失败处理协议
+- 启动行为
 
-### Code Interpreter 模式
-如果用户开启 Code Interpreter：
-- execute skill 可生成并运行 Python
-- 可下载文件
+删除：
+- 完整能力树（文件引用，ChatGPT 不支持）
 
-## 推荐用法
+## 上传专家身份作为 Knowledge（可选）
 
-- 适合：方案咨询、文档撰写、行业分析（L1/L2）
-- 不适合：完整软件项目交付（L3，因为没有持续的文件系统）
+GPTs 支持 Knowledge 文件上传：
+
+1. Configure → Knowledge → Upload
+2. 上传：
+   - `experts/business-consultant.md`
+   - `experts/software-engineer.md`
+   - `experts/data-analyst.md`
+   - 其他你常用的专家身份
+
+GPT 会自动检索这些文件回答。
+
+## 验证
+
+1. 在你的 GPT 里开新对话
+2. 提任意问题
+3. AI 应按 UEE 流程响应（先 classify）
+
+## 限制和应对
+
+| 限制 | 应对 |
+|------|------|
+| Instructions 字数限制 | 仅加载核心段，不加载详细 skill |
+| 无文件系统 | deliver 用 markdown 输出，让用户手动保存 |
+| 无终端 | execute 仅生成代码，不执行 |
+| 单对话上下文 | 长项目建议拆成多次对话 |
+| Knowledge 检索质量 | 用关键词明确指向某个专家身份 |
+
+## 升级 UEE
+
+```bash
+cd /path/to/uee
+git pull origin main
+
+# 重新粘贴 Instructions
+cat entry.md | pbcopy
+# 进入 GPT → Edit → 替换 Instructions
+```
 
 ## 文件组织规则
 
-无文件系统时，改为：
-- 在 markdown 中用清晰的章节分隔
+无文件系统时：
+- deliver 用清晰 markdown 章节结构
 - 让用户自行保存到本地
+- 在交付摘要中告知用户哪些应该保存到哪个文件名

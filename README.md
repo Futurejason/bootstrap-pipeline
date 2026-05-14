@@ -3,7 +3,22 @@
 > 全能行业专家引擎 v1.0.0
 > 用户只需要：提问 → 完善条件 → 确认方案 → 拿到结果。
 
-## 核心定位
+## 快速开始（30 秒）
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
+cd uee
+
+# 2. 一键安装（自动检测平台）
+./setup.sh
+```
+
+完整安装指南见 [INSTALL.md](INSTALL.md)，按平台分别说明：
+- [Kiro](adapters/kiro.md) | [Claude Code](adapters/claude-code.md) | [Cursor](adapters/cursor.md)
+- [Windsurf](adapters/windsurf.md) | [ChatGPT](adapters/chatgpt.md) | [Claude](adapters/claude.md)
+
+## 这是什么
 
 UEE 是一个让 AI 自主解决任何领域问题的工作流系统。AI 自动判断问题领域、复杂度，加载对应专家身份，按标准流程闭环交付，全程仅在 4 个关键节点请求用户介入。
 
@@ -38,26 +53,16 @@ UEE 是一个让 AI 自主解决任何领域问题的工作流系统。AI 自动
 | 🔴 P3 | 遇阻塞 | 二选一/多选一 |
 | 🟢 P4 | deliver 完成后 | 验收 |
 
-## 使用方式
+## 11 个动态专家身份
 
-### 方式 1：在 Kiro 中（最简单）
-通过 steering 自动加载，直接提问即可。
-
-### 方式 2：在其他平台
-把 `entry.md` 内容粘贴到对应平台的系统提示词。
-- Cursor: `.cursorrules` 或 Settings → Rules for AI
-- Claude Code: 项目根目录 `CLAUDE.md`
-- Windsurf: `.windsurfrules`
-- ChatGPT/GPTs: Instructions
-- Claude Projects: Project Instructions
-
-### 方式 3：单 Skill 调用
-直接告诉 AI："使用 review skill 检查这个文档"，会跳过流程编排只跑那一个 skill。
+软件工程师 / 解决方案架构师 / 产品经理 / 内容创作者 / 商业咨询 / 数据分析师 / 法律顾问 / 医疗参考 / 营销策略师 / 教育工作者 / 通用兜底
 
 ## 项目结构
 
 ```
-universal-expert-engine/
+uee/
+├── INSTALL.md            # 全平台安装指南
+├── setup.sh              # 一键安装脚本
 ├── entry.md              # 总入口（自包含路由 + 平台检测）
 ├── ETHOS.md              # 行为准则（不变量）
 ├── ARCHITECTURE.md       # 架构设计
@@ -72,18 +77,36 @@ universal-expert-engine/
 
 ## 设计原则
 
-1. **复杂度自适应**：AI 自动判断 L1/L2/L3，不让用户操心
-2. **专家身份动态**：根据领域加载对应专家，不固定角色
+1. **复杂度自适应**：AI 自动判断 L1/L2/L3
+2. **专家身份动态**：根据领域加载对应专家
 3. **四维质量门**：完备性/准确性/一致性/可行性，每阶段强制通过
 4. **证据链可追溯**：每个论断有论据 → 来源 → 可信度三元组
 5. **失败三层降级**：重试 → 备选 → 简化上报
 
-## 与 gstack / universal-problem-solver 的关系
+## 验证 UEE 是否生效
 
-- 借鉴 gstack 的 **Skill 化架构**（独立子目录，可单独使用）
-- 继承 universal-problem-solver 的 **跨平台单文件入口**
-- 整合现有 7 阶段交付流程的 **质量保障与角色划分**
-- 新增 **复杂度自适应** 和 **动态专家身份**
+提问任意问题，AI 应该：
+1. 不直接回答，而是先输出 `[classify] domain=... complexity=...`
+2. 关键论断带 `【论断】【论据】【来源】【可信度】` 三元组
+3. 在 P1/P2/P4 节点暂停等用户
+
+如果 AI 直接回答没有上述结构 → 检查配置文件路径，详见 [INSTALL.md 的"通用问题"](INSTALL.md#通用问题)。
+
+## 升级
+
+```bash
+cd /path/to/uee
+git pull origin main
+```
+
+如果用了 Cursor / Windsurf / Claude Code，需要重新生成配置文件：
+
+```bash
+cp entry.md .cursorrules    # 或 .windsurfrules / CLAUDE.md
+```
+
+Kiro 用户的 steering 文件不需要改（用的相对路径）。
+ChatGPT / Claude Projects 需手动重新粘贴 Instructions。
 
 ## 版本
 

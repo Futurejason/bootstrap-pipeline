@@ -4,45 +4,92 @@
 
 - 通过 `.cursorrules` 文件加载规则
 - 支持 Settings → Rules for AI 配置
-- 有终端访问能力
-- 文件读写可用
+- 终端 + 文件读写可用
 
-## 加载方式
+## 从 git 克隆后的安装步骤
 
-### 方式 1：项目级（推荐）
+### 场景 1：直接在 UEE 仓库内使用
 
-在项目根目录创建 `.cursorrules`，粘贴 `entry.md` 全部内容。
+```bash
+git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
+cd uee
 
-### 方式 2：全局级
+# 一键
+./setup.sh
 
-打开 Cursor → Settings → Rules for AI → 粘贴 `entry.md` 内容。
+# 或手动
+cp entry.md .cursorrules
+```
+
+打开 Cursor → Open Folder → 选择 uee 目录。
+
+### 场景 2：在你的项目里使用
+
+```bash
+cd /path/to/your-project
+git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
+cp uee/entry.md .cursorrules
+```
+
+### 场景 3：附加常用 skill 到 .cursorrules
+
+Cursor 不支持文件引用，但可拼接：
+
+```bash
+cat uee/entry.md > .cursorrules
+echo "" >> .cursorrules
+echo "---" >> .cursorrules
+echo "" >> .cursorrules
+cat uee/skills/classify/SKILL.md >> .cursorrules
+cat uee/skills/clarify/SKILL.md >> .cursorrules
+cat uee/skills/plan/SKILL.md >> .cursorrules
+cat uee/skills/review/SKILL.md >> .cursorrules
+cat uee/quality-gates/four-dimensions.md >> .cursorrules
+```
+
+注意：`.cursorrules` 太大可能影响响应速度，按需选择。
+
+### 场景 4：全局配置（所有项目都生效）
+
+打开 Cursor → Settings → Rules for AI → 粘贴 entry.md 内容。
+
+```bash
+cat uee/entry.md | pbcopy   # macOS
+# 然后粘贴到 Settings
+```
+
+## 验证
+
+1. 重启 Cursor
+2. 用 Cmd+L 打开 chat，提问"你好"
+3. AI 应进入 UEE 流程
+
+如果没生效：
+- 检查 `.cursorrules` 在项目根目录
+- 文件内容用 `head -20 .cursorrules` 确认
+- 重启 Cursor
 
 ## Cursor 特有能力利用
 
-### 1. 利用 Cmd+K / Cmd+L
+### 1. Cmd+K vs Cmd+L
+- Cmd+L 适合走 UEE 整体流程（深度对话）
+- Cmd+K 适合调用单 skill（"用 review 检查这块代码"）
 
-- Cmd+L 适合用 UEE 的整体流程（深度对话）
-- Cmd+K 适合调用单 skill（如"用 review 检查这块代码"）
-
-### 2. 文件上下文
-
-Cursor 自动加载当前打开文件作为上下文：
-- 在 resource skill 阶段会自动包含
-- 减少用户手动粘贴的需要
-
-### 3. @file / @folder 引用
-
-用户可显式引用文件：
+### 2. @file / @folder 引用
+用户可显式引用：
 - `@docs/requirements.md 帮我 review` → 触发 review skill
 
-## Cursor 限制
+### 3. 文件上下文自动加载
+当前打开文件自动作为上下文，resource skill 会自动包含。
 
-### 不支持文件引用
-`.cursorrules` 单文件，不能像 Kiro 那样 `#[[file:...]]` 加载多文件。
+## 升级 UEE
 
-### 解决：将常用 skill 内嵌
-
-`.cursorrules` 中除 entry.md 外，可附加最常用 skill 内容（建议：classify / plan / review）。
+```bash
+cd /path/to/uee
+git pull origin main
+cd /path/to/your-project
+cp uee/entry.md .cursorrules   # 重新生成
+```
 
 ## 文件组织规则
 

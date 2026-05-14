@@ -1,0 +1,59 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest", "/Users/liuyang/Desktop/ai/kiro"],
+      "disabled": false,
+      "autoApprove": ["read_file", "read_multiple_files", "list_directory", "directory_tree", "search_files"],
+      "description": "文件系统操作：读写项目文件、搜索内容、管理目录结构"
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory@latest"],
+      "disabled": false,
+      "autoApprove": [],
+      "description": "知识图谱记忆：跨会话保存实体关系、需求上下文、决策记录"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking@latest"],
+      "disabled": false,
+      "autoApprove": [],
+      "description": "顺序思维链：复杂需求分析、多步骤推理、问题拆解"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@latest"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      },
+      "disabled": true,
+      "autoApprove": [],
+      "description": "GitHub 集成：管理代码仓库、Issues、PR，追踪需求与代码的关联"
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search@latest"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE"
+      },
+      "disabled": true,
+      "autoApprove": [],
+      "description": "网络搜索：查找技术文档、最佳实践、行业标准，辅助需求分析"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer@latest"],
+      "disabled": true,
+      "autoApprove": [],
+      "description": "浏览器自动化：抓取网页内容、截图、自动化测试 Web 界面"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres@latest", "postgresql://localhost/mydb"],
+      "disabled": true,
+      "autoApprove": [],
+      "description": "PostgreSQL 数据库：存储需求数据、会议记录、项目状态"
+    }
+  }
+}

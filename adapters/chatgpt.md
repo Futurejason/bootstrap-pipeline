@@ -29,6 +29,8 @@ cat entry.md | xclip -selection clipboard
 
 # Windows (Git Bash)
 cat entry.md | clip
+
+# 任意系统：手动打开 entry.md 全选复制
 ```
 
 ### 步骤 3a：创建 GPT（推荐）
@@ -50,11 +52,17 @@ cat entry.md | clip
 ChatGPT GPTs Instructions 约 8000 字符。如果 entry.md 超长：
 
 ```bash
-# 截取核心部分（删除"完整能力树"段）
-sed '/^# 完整能力树/,$d' entry.md | pbcopy
+# 截取到「文件引用平台」段之前（macOS）
+sed '/^# 文件引用平台的扩展加载/,$d' entry.md | pbcopy
+
+# Linux
+sed '/^# 文件引用平台的扩展加载/,$d' entry.md | xclip -selection clipboard
+
+# Windows (Git Bash)
+sed '/^# 文件引用平台的扩展加载/,$d' entry.md | clip
 ```
 
-或保留：
+保留：
 - 平台自动检测段
 - 引擎核心段
 - 9 个 Skill 描述
@@ -62,7 +70,7 @@ sed '/^# 完整能力树/,$d' entry.md | pbcopy
 - 启动行为
 
 删除：
-- 完整能力树（文件引用，ChatGPT 不支持）
+- 文件引用平台的扩展加载（这段对 Web 平台无意义）
 
 ## 上传专家身份作为 Knowledge（可选）
 
@@ -100,7 +108,13 @@ cd /path/to/uee
 git pull origin main
 
 # 重新粘贴 Instructions
+# macOS
 cat entry.md | pbcopy
+# Linux
+cat entry.md | xclip -selection clipboard
+# Windows
+cat entry.md | clip
+
 # 进入 GPT → Edit → 替换 Instructions
 ```
 

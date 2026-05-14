@@ -10,9 +10,13 @@
 git clone https://github.com/Futurejason/bootstrap-pipeline.git uee
 cd uee
 
-# 2. 一键安装（自动检测平台）
+# 2. 一键安装（自动检测平台，也可手动选择）
 ./setup.sh
 ```
+
+`setup.sh` 会自动检测 Kiro / Cursor / Claude Code / Windsurf 并配置。如果未检测到，会显示菜单让你手动选择。
+
+ChatGPT 和 Claude Projects 是 Web 平台，需要手动复制 `entry.md` 内容到 Instructions 字段。
 
 完整安装指南见 [INSTALL.md](INSTALL.md)，按平台分别说明：
 - [Kiro](adapters/kiro.md) | [Claude Code](adapters/claude-code.md) | [Cursor](adapters/cursor.md)

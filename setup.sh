@@ -47,9 +47,22 @@ setup_kiro() {
   echo "→ 配置 Kiro..."
   mkdir -p "$TARGET_DIR/.kiro/steering"
 
-  # 计算 UEE 相对路径
+  # 计算 UEE 相对路径（python3 优先，否则用 perl，再否则用纯 shell）
   local rel_path
-  rel_path=$(python3 -c "import os.path; print(os.path.relpath('$UEE_DIR', '$TARGET_DIR/.kiro/steering'))")
+  if command -v python3 >/dev/null 2>&1; then
+    rel_path=$(python3 -c "import os.path; print(os.path.relpath('$UEE_DIR', '$TARGET_DIR/.kiro/steering'))")
+  elif command -v perl >/dev/null 2>&1; then
+    rel_path=$(perl -e 'use File::Spec; print File::Spec->abs2rel($ARGV[0], $ARGV[1])' "$UEE_DIR" "$TARGET_DIR/.kiro/steering")
+  else
+    # Fallback：UEE 与目标在同一仓库时，直接用 ../../
+    if [ "$UEE_DIR" = "$TARGET_DIR" ]; then
+      rel_path="../.."
+    else
+      echo "  ⚠️  未找到 python3 或 perl，无法自动计算路径"
+      echo "  请手动编辑 $TARGET_DIR/.kiro/steering/uee.md，路径设为 UEE 仓库相对位置"
+      rel_path="../../uee"
+    fi
+  fi
 
   cat > "$TARGET_DIR/.kiro/steering/uee.md" << EOF
 ---

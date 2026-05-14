@@ -260,21 +260,11 @@ confidence: 0.0-1.0
 
 ---
 
-# 完整能力树（仅文件引用平台可用）
+# 文件引用平台的扩展加载（Kiro / Claude Code）
 
-如果你的平台支持文件引用（Kiro / Claude Code），可加载完整能力：
+如果你的平台支持文件引用，建议使用 `setup.sh` 生成 `.kiro/steering/uee.md` 来加载完整能力树。
+脚本会自动计算正确的相对路径——手动写文件路径容易出错。
 
-#[[file:ETHOS.md]]
-#[[file:orchestrator/ORCHESTRATOR.md]]
-#[[file:skills/classify/SKILL.md]]
-#[[file:skills/clarify/SKILL.md]]
-#[[file:skills/resource/SKILL.md]]
-#[[file:skills/plan/SKILL.md]]
-#[[file:skills/design/SKILL.md]]
-#[[file:skills/execute/SKILL.md]]
-#[[file:skills/review/SKILL.md]]
-#[[file:skills/deliver/SKILL.md]]
-#[[file:skills/refine/SKILL.md]]
-#[[file:quality-gates/four-dimensions.md]]
-#[[file:quality-gates/evidence-chain.md]]
-#[[file:templates/decision-brief.md]]
+不想用脚本时，可手动创建 steering 文件，参考 `adapters/kiro.md` 中的"场景 1"或"场景 2"。
+
+如果当前正以 entry.md 为唯一上下文（无文件系统支持），那么本文件已包含核心流程，无需额外加载。

@@ -54,9 +54,17 @@ cat uee/quality-gates/four-dimensions.md >> .cursorrules
 打开 Cursor → Settings → Rules for AI → 粘贴 entry.md 内容。
 
 ```bash
-cat uee/entry.md | pbcopy   # macOS
-# 然后粘贴到 Settings
+# macOS
+cat uee/entry.md | pbcopy
+
+# Linux
+cat uee/entry.md | xclip -selection clipboard
+
+# Windows (Git Bash)
+cat uee/entry.md | clip
 ```
+
+然后在 Cursor 设置中粘贴即可。
 
 ## 验证
 

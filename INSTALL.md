@@ -65,33 +65,37 @@ cd uee
 
    # Universal Expert Engine
 
-   #[[file:../../uee/entry.md]]
-   #[[file:../../uee/ETHOS.md]]
-   #[[file:../../uee/orchestrator/ORCHESTRATOR.md]]
-   #[[file:../../uee/orchestrator/routing-rules.md]]
-   #[[file:../../uee/quality-gates/four-dimensions.md]]
-   #[[file:../../uee/quality-gates/evidence-chain.md]]
-   #[[file:../../uee/skills/classify/SKILL.md]]
-   #[[file:../../uee/skills/clarify/SKILL.md]]
-   #[[file:../../uee/skills/resource/SKILL.md]]
-   #[[file:../../uee/skills/plan/SKILL.md]]
-   #[[file:../../uee/skills/design/SKILL.md]]
-   #[[file:../../uee/skills/execute/SKILL.md]]
-   #[[file:../../uee/skills/review/SKILL.md]]
-   #[[file:../../uee/skills/deliver/SKILL.md]]
-   #[[file:../../uee/skills/refine/SKILL.md]]
+   #[[file:../../entry.md]]
+   #[[file:../../ETHOS.md]]
+   #[[file:../../orchestrator/ORCHESTRATOR.md]]
+   #[[file:../../orchestrator/routing-rules.md]]
+   #[[file:../../quality-gates/four-dimensions.md]]
+   #[[file:../../quality-gates/evidence-chain.md]]
+   #[[file:../../skills/classify/SKILL.md]]
+   #[[file:../../skills/clarify/SKILL.md]]
+   #[[file:../../skills/resource/SKILL.md]]
+   #[[file:../../skills/plan/SKILL.md]]
+   #[[file:../../skills/design/SKILL.md]]
+   #[[file:../../skills/execute/SKILL.md]]
+   #[[file:../../skills/review/SKILL.md]]
+   #[[file:../../skills/deliver/SKILL.md]]
+   #[[file:../../skills/refine/SKILL.md]]
    EOF
    ```
 
-   > 路径 `../../uee/` 从 `.kiro/steering/` 出发，向上两级到项目根，再进入 `uee/`。如果 UEE 仓库不叫 uee，改对应名字。
+   > 路径 `../../` 从 `.kiro/steering/` 出发，向上 2 级到 UEE 仓库根。
+   > **如果 UEE 是放在你项目子目录（不是直接在 UEE 仓库工作）**，把 `../../` 改成 `../../uee/`（假设子目录名为 uee）。
 
 3. **重启 Kiro 窗口**（让 steering 生效）
 
 4. **验证**：在 Kiro chat 里输入任意问题，AI 应该按 UEE 流程响应（先 classify，再 clarify ...）。
 
 ### 单仓库模式
-如果你直接 clone UEE 后就在它里面使用：
-- 把上面 `../../uee/` 路径改成 `../../`（向上两级到 UEE 根）
+**直接 clone UEE 后在仓库内使用**：用上面的写法（`../../`）即可。
+
+**在你的项目里嵌套使用 UEE**（推荐做法是建议用户自己 clone 一份）：
+- 在你的项目根 clone：`git clone ... uee`
+- steering 文件路径改成 `../../uee/...`
 
 ---
 
@@ -205,9 +209,14 @@ cp entry.md .windsurfrules
 
    如果需要 Instructions 内容：
    ```bash
-   cat entry.md | pbcopy   # macOS
-   # 或
-   cat entry.md | xclip -selection clipboard   # Linux
+   # macOS
+   cat entry.md | pbcopy
+
+   # Linux
+   cat entry.md | xclip -selection clipboard
+
+   # Windows (Git Bash)
+   cat entry.md | clip
    ```
 
 3. 配置：
@@ -284,7 +293,7 @@ ChatGPT/Claude Projects 需要手动重新粘贴 Instructions。
 
 ### Q: 想关闭 UEE？
 
-- Kiro: 把 `.kiro/steering/uee.md` 顶部 `inclusion: auto` 改成 `inclusion: manual`
+- Kiro: 把 `.kiro/steering/uee.md` 顶部 `inclusion: auto` 改成 `inclusion: manual`（之后用 `#uee` 手动触发），或直接删除该文件
 - Cursor / Windsurf: 删除 `.cursorrules` / `.windsurfrules`
 - Claude Code: 删除 `CLAUDE.md`
 - ChatGPT GPTs: 切换到普通 ChatGPT

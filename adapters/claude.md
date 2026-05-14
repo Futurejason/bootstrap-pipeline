@@ -21,7 +21,14 @@ cd uee
 1. Claude.ai → Projects → New Project
 2. 设置 Project Instructions：
    ```bash
+   # macOS
    cat entry.md | pbcopy
+
+   # Linux
+   cat entry.md | xclip -selection clipboard
+
+   # Windows (Git Bash)
+   cat entry.md | clip
    ```
    把内容粘贴到 Project Instructions。
 
@@ -87,7 +94,13 @@ cd /path/to/uee
 git pull origin main
 
 # Project Instructions 需要手动重新粘贴
+# macOS
 cat entry.md | pbcopy
+# Linux
+cat entry.md | xclip -selection clipboard
+# Windows
+cat entry.md | clip
+
 # 进入 Claude Project → Edit Instructions
 
 # Knowledge 文件如有变化，删除旧的重新上传

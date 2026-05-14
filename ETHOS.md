@@ -102,7 +102,7 @@
 ### 文件引用支持的平台（Kiro / Claude Code）
 通过 `#[[file:path]]` 加载完整能力树。
 
-### 单文件平台（ChatGPT / 通义 / 豆包）
+### 单文件平台（ChatGPT / Claude Projects 等无文件系统平台）
 仅加载 entry.md 自包含内容。能力子集，但核心 9 阶段流程完整。
 
 ### 不支持的能力

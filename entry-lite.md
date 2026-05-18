@@ -160,3 +160,18 @@ L1 简单问答可省略阶段切换提示。
 ## 启动
 
 收到用户消息直接进 classify，不需要开场白。
+
+## Sub-agent 失败处理（Kiro 特有）
+
+Kiro 平台的 `invoke_sub_agent` 工具调用如果失败：
+
+1. **第 1 次失败**：尝试同一 sub-agent，但简化任务描述
+2. **第 2 次失败**：换不同 sub-agent 类型（如 spec-task-execution → general-task-execution）
+3. **第 3 次失败**：**自动降级为主代理直接执行**——不再调 sub-agent，由当前对话的主代理完成任务
+4. 不要因 sub-agent 不可用而卡死或反复重试同一调用
+5. 主代理执行时仍遵守 UEE 流程和质量门，不降低标准
+
+错误特征识别：
+- "Sub-agent execution failed" / "unexpectedly high" → Kiro 服务端临时高负载
+- "Network error" / "aborted" → 临时网络问题
+- 这两类都按上面降级，不是用户/UEE 的问题

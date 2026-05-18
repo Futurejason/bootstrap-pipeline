@@ -283,8 +283,21 @@ relpath() {
 setup_kiro() {
   echo "→ 配置 Kiro..."
   mkdir -p "$TARGET_DIR/.kiro/steering"
-  local rel
-  rel=$(relpath "$TARGET_DIR/.kiro/steering" "$EFFECTIVE_UEE_DIR")
+
+  # 策略：把 UEE 关键文件复制到 .kiro/steering/uee-files/
+  # 优点：路径短而清晰、不依赖 home 路径、项目可移植、Kiro 100% 兼容
+  # 即使用户在不同机器或路径运行项目都能正常加载
+  local kiro_uee_dir="$TARGET_DIR/.kiro/steering/uee-files"
+  rm -rf "$kiro_uee_dir"
+  mkdir -p "$kiro_uee_dir"
+
+  # 复制 Kiro steering 需要的核心文件（约 50KB 全部）
+  cp "$EFFECTIVE_UEE_DIR/entry.md" "$kiro_uee_dir/"
+  cp "$EFFECTIVE_UEE_DIR/ETHOS.md" "$kiro_uee_dir/"
+  cp -r "$EFFECTIVE_UEE_DIR/orchestrator" "$kiro_uee_dir/"
+  cp -r "$EFFECTIVE_UEE_DIR/quality-gates" "$kiro_uee_dir/"
+  cp -r "$EFFECTIVE_UEE_DIR/skills" "$kiro_uee_dir/"
+
   cat > "$TARGET_DIR/.kiro/steering/uee.md" << EOF
 ---
 inclusion: auto
@@ -293,23 +306,24 @@ inclusion: auto
 $UEE_MARK
 # Universal Expert Engine
 
-#[[file:$rel/entry.md]]
-#[[file:$rel/ETHOS.md]]
-#[[file:$rel/orchestrator/ORCHESTRATOR.md]]
-#[[file:$rel/orchestrator/routing-rules.md]]
-#[[file:$rel/quality-gates/four-dimensions.md]]
-#[[file:$rel/quality-gates/evidence-chain.md]]
-#[[file:$rel/skills/classify/SKILL.md]]
-#[[file:$rel/skills/clarify/SKILL.md]]
-#[[file:$rel/skills/resource/SKILL.md]]
-#[[file:$rel/skills/plan/SKILL.md]]
-#[[file:$rel/skills/design/SKILL.md]]
-#[[file:$rel/skills/execute/SKILL.md]]
-#[[file:$rel/skills/review/SKILL.md]]
-#[[file:$rel/skills/deliver/SKILL.md]]
-#[[file:$rel/skills/refine/SKILL.md]]
+#[[file:uee-files/entry.md]]
+#[[file:uee-files/ETHOS.md]]
+#[[file:uee-files/orchestrator/ORCHESTRATOR.md]]
+#[[file:uee-files/orchestrator/routing-rules.md]]
+#[[file:uee-files/quality-gates/four-dimensions.md]]
+#[[file:uee-files/quality-gates/evidence-chain.md]]
+#[[file:uee-files/skills/classify/SKILL.md]]
+#[[file:uee-files/skills/clarify/SKILL.md]]
+#[[file:uee-files/skills/resource/SKILL.md]]
+#[[file:uee-files/skills/plan/SKILL.md]]
+#[[file:uee-files/skills/design/SKILL.md]]
+#[[file:uee-files/skills/execute/SKILL.md]]
+#[[file:uee-files/skills/review/SKILL.md]]
+#[[file:uee-files/skills/deliver/SKILL.md]]
+#[[file:uee-files/skills/refine/SKILL.md]]
 EOF
   echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md"
+  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/"
   echo "  → 重启 Kiro 让规则生效"
 }
 

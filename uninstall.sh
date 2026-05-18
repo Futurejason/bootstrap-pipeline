@@ -72,6 +72,7 @@ check_and_add "$TARGET_DIR/.cursorrules" file
 check_and_add "$TARGET_DIR/.windsurfrules" file
 check_and_add "$TARGET_DIR/CLAUDE.md" file
 check_and_add "$TARGET_DIR/.kiro/steering/uee.md" file
+check_and_add "$TARGET_DIR/.kiro/steering/uee-files" dir
 check_and_add "$TARGET_DIR/.uee" dir
 
 if [ ${#TO_DELETE[@]} -eq 0 ]; then

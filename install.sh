@@ -174,10 +174,9 @@ interactive_select() {
     return
   fi
 
-  # 解析编号或名称
   IFS=',' read -ra parts <<< "$choice"
   for part in "${parts[@]}"; do
-    part="$(echo "$part" | xargs)"  # trim
+    part="$(echo "$part" | xargs)"
     if [[ "$part" =~ ^[0-9]+$ ]]; then
       local idx=$((part - 1))
       if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#ALL_PLATFORMS[@]}" ]; then
@@ -186,7 +185,6 @@ interactive_select() {
         echo "  ⚠️  忽略无效编号：$part"
       fi
     else
-      # 检查是否是合法平台名
       local valid=0
       for p in "${ALL_PLATFORMS[@]}"; do
         [ "$p" = "$part" ] && valid=1 && break
@@ -203,7 +201,6 @@ interactive_select() {
 # ===== 决定要安装的平台 =====
 if [ ${#SELECTED_PLATFORMS[@]} -eq 0 ]; then
   if [ "$YES" -eq 1 ]; then
-    # --yes：自动选检测到的全部
     for p in "${ALL_PLATFORMS[@]}"; do
       detect_platform "$p" && SELECTED_PLATFORMS+=("$p")
     done
@@ -234,7 +231,7 @@ for p in "${SELECTED_PLATFORMS[@]}"; do
 done
 echo ""
 
-if [ "$YES" -ne 1 ] && [ ${#SELECTED_PLATFORMS[@]} -gt 0 ] && [ -z "$ALREADY_CONFIRMED" ]; then
+if [ "$YES" -ne 1 ] && [ ${#SELECTED_PLATFORMS[@]} -gt 0 ]; then
   read -rp "确认？[Y/n] " confirm
   if [[ "$confirm" =~ ^[Nn]$ ]]; then
     echo "已取消"
@@ -254,7 +251,7 @@ if [ "$MODE" = "local" ]; then
   fi
   echo "→ 复制 UEE 到 $TARGET_DIR/.uee ..."
   mkdir -p "$TARGET_DIR/.uee"
-  for item in entry.md ETHOS.md ARCHITECTURE.md README.md VERSION skills orchestrator experts quality-gates adapters templates examples; do
+  for item in entry.md entry-lite.md ETHOS.md ARCHITECTURE.md README.md VERSION skills orchestrator experts quality-gates adapters templates examples; do
     if [ -e "$UEE_DIR/$item" ]; then
       cp -r "$UEE_DIR/$item" "$TARGET_DIR/.uee/"
     fi
@@ -265,78 +262,69 @@ else
   EFFECTIVE_UEE_DIR="$UEE_DIR"
 fi
 
-# ===== 计算相对路径（仅 Kiro 用）=====
-relpath() {
-  local from="$1"
-  local to="$2"
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c "import os.path; print(os.path.relpath('$to', '$from'))"
-  elif command -v perl >/dev/null 2>&1; then
-    perl -e 'use File::Spec; print File::Spec->abs2rel($ARGV[0], $ARGV[1])' "$to" "$from"
-  else
-    echo "$to"
-  fi
-}
-
 # ===== 各平台配置 =====
 
 setup_kiro() {
   echo "→ 配置 Kiro..."
+
+  # === 关键：Kiro 会把 .kiro/steering/ 下所有 .md 都自动当 steering 加载 ===
+  # 所以详细文件必须放到 .kiro/ 之外，避免被强制加载吃 token。
+  # 选用 .uee-data/ 作为目标项目下的隐藏数据目录。
+
+  # 先清理旧版本残留（之前用过 .kiro/steering/uee-files/）
+  if [ -d "$TARGET_DIR/.kiro/steering/uee-files" ]; then
+    echo "  ⚠️  检测到旧版本 .kiro/steering/uee-files/，清理中..."
+    rm -rf "$TARGET_DIR/.kiro/steering/uee-files"
+  fi
+
   mkdir -p "$TARGET_DIR/.kiro/steering"
 
-  # 策略：把 UEE 关键文件复制到 .kiro/steering/uee-files/
-  # 优点：路径短而清晰、不依赖 home 路径、项目可移植、Kiro 100% 兼容
-  # 即使用户在不同机器或路径运行项目都能正常加载
-  local kiro_uee_dir="$TARGET_DIR/.kiro/steering/uee-files"
-  rm -rf "$kiro_uee_dir"
-  mkdir -p "$kiro_uee_dir"
+  # 详细文件放到 .uee-data/（不在 Kiro 自动加载范围）
+  local data_dir="$TARGET_DIR/.uee-data"
+  rm -rf "$data_dir"
+  mkdir -p "$data_dir"
 
-  # 复制 UEE 全部核心文件供 AI 按需读取（不通过 steering 强制加载）
-  # entry-lite 是默认加载，entry 是详细备份
-  cp "$EFFECTIVE_UEE_DIR/entry-lite.md" "$kiro_uee_dir/" 2>/dev/null || true
-  cp "$EFFECTIVE_UEE_DIR/entry.md" "$kiro_uee_dir/"
-  cp "$EFFECTIVE_UEE_DIR/ETHOS.md" "$kiro_uee_dir/"
-  cp -r "$EFFECTIVE_UEE_DIR/orchestrator" "$kiro_uee_dir/"
-  cp -r "$EFFECTIVE_UEE_DIR/quality-gates" "$kiro_uee_dir/"
-  cp -r "$EFFECTIVE_UEE_DIR/skills" "$kiro_uee_dir/"
-  cp -r "$EFFECTIVE_UEE_DIR/templates" "$kiro_uee_dir/" 2>/dev/null || true
+  for item in entry.md ETHOS.md skills orchestrator quality-gates templates experts; do
+    if [ -e "$EFFECTIVE_UEE_DIR/$item" ]; then
+      cp -r "$EFFECTIVE_UEE_DIR/$item" "$data_dir/"
+    fi
+  done
 
-  # uee.md 默认加载 entry-lite.md（精简版，省 token）
-  # 用户说"详细模式"或"完整流程"时，AI 自行 read entry.md（完整版）
-  local entry_file="entry-lite.md"
-  [ ! -f "$kiro_uee_dir/entry-lite.md" ] && entry_file="entry.md"
+  # 把 entry-lite 内联到 uee.md（不用 #[[file:]] 引用，避免 Kiro 扫描子目录）
+  local src="$EFFECTIVE_UEE_DIR/entry-lite.md"
+  [ ! -f "$src" ] && src="$EFFECTIVE_UEE_DIR/entry.md"
 
-  cat > "$TARGET_DIR/.kiro/steering/uee.md" << EOF
----
-inclusion: auto
----
+  {
+    echo "---"
+    echo "inclusion: auto"
+    echo "---"
+    echo ""
+    echo "$UEE_MARK"
+    cat "$src"
+    echo ""
+    echo "---"
+    echo ""
+    echo "## 详细规范（按需 Read，不自动加载）"
+    echo ""
+    echo "AI 需要细节时，用 Read 工具按以下路径读取（**不要**全部读，按需）："
+    echo ""
+    echo "- 完整入口：\`.uee-data/entry.md\`"
+    echo "- 行为准则：\`.uee-data/ETHOS.md\`"
+    echo "- 流程编排：\`.uee-data/orchestrator/ORCHESTRATOR.md\`"
+    echo "- 路由规则：\`.uee-data/orchestrator/routing-rules.md\`"
+    echo "- 三档流程：\`.uee-data/orchestrator/flows/L{1,2,3}-*.md\`"
+    echo "- 质量四维：\`.uee-data/quality-gates/four-dimensions.md\`"
+    echo "- 证据链：\`.uee-data/quality-gates/evidence-chain.md\`"
+    echo "- 可信度：\`.uee-data/quality-gates/confidence-marker.md\`"
+    echo "- 对抗自检：\`.uee-data/quality-gates/adversarial-check.md\`"
+    echo "- 失败降级：\`.uee-data/quality-gates/fallback-strategy.md\`"
+    echo "- 9 个 Skill：\`.uee-data/skills/<name>/SKILL.md\`"
+    echo "- 11 个专家：\`.uee-data/experts/<name>.md\`"
+    echo "- 决策简报模板：\`.uee-data/templates/decision-brief.md\`"
+  } > "$TARGET_DIR/.kiro/steering/uee.md"
 
-$UEE_MARK
-# Universal Expert Engine
-
-精简版引擎入口（已含完整 9 阶段流程、4 个用户介入点、四维质量门）：
-
-#[[file:uee-files/$entry_file]]
-
-## 详细规范（按需读取，不自动加载，避免 token 浪费）
-
-需要细节时，按需读取以下文件：
-
-- 完整入口（含详细 skill 描述）：\`uee-files/entry.md\`
-- 行为准则：\`uee-files/ETHOS.md\`
-- 流程编排：\`uee-files/orchestrator/ORCHESTRATOR.md\`
-- 路由规则：\`uee-files/orchestrator/routing-rules.md\`
-- 三档流程：\`uee-files/orchestrator/flows/L{1,2,3}-*.md\`
-- 质量四维：\`uee-files/quality-gates/four-dimensions.md\`
-- 证据链：\`uee-files/quality-gates/evidence-chain.md\`
-- 可信度：\`uee-files/quality-gates/confidence-marker.md\`
-- 对抗自检：\`uee-files/quality-gates/adversarial-check.md\`
-- 失败降级：\`uee-files/quality-gates/fallback-strategy.md\`
-- 9 个 Skill：\`uee-files/skills/<name>/SKILL.md\`
-- 决策简报模板：\`uee-files/templates/decision-brief.md\`
-EOF
-  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（默认加载 $entry_file，省 token）"
-  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/"
+  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（仅此 1 个文件被 Kiro 自动加载）"
+  echo "  ✓ 详细文件放在 $TARGET_DIR/.uee-data/（Kiro 不会自动加载）"
   echo "  → 重启 Kiro 让规则生效"
 }
 
@@ -347,7 +335,6 @@ setup_cursor() {
     echo "  ⚠️  $target 已存在且非 UEE 管理，备份为 $target.bak"
     cp "$target" "$target.bak"
   fi
-  # 优先用 entry-lite（省 token），fallback 到 entry
   local src="$EFFECTIVE_UEE_DIR/entry-lite.md"
   [ ! -f "$src" ] && src="$EFFECTIVE_UEE_DIR/entry.md"
   {
@@ -412,7 +399,7 @@ echo ""
 echo "已安装的平台：${SELECTED_PLATFORMS[*]}"
 echo ""
 echo "对于 ChatGPT / Claude Projects 等 Web 平台："
-echo "  请将 $EFFECTIVE_UEE_DIR/entry.md 内容粘贴到 Instructions"
+echo "  请将 $EFFECTIVE_UEE_DIR/entry-lite.md（或 entry.md）内容粘贴到 Instructions"
 echo ""
 echo "卸载："
 echo "  $UEE_DIR/uninstall.sh --target=$TARGET_DIR"

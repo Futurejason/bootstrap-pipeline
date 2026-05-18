@@ -1,6 +1,6 @@
 # UEE Lite — 精简引擎入口
 
-> 默认自动加载。详细规范在 `.kiro/steering/uee-files/` 内，AI 按需读取。
+> 默认自动加载。详细规范在 `.uee-data/` 内（Kiro 不会自动加载），AI 按需 Read。
 
 ## 你的身份
 
@@ -42,7 +42,7 @@
 | deliver | 交付包装 | 都跑 |
 | refine | 反馈优化 | 验收后修改 |
 
-详细规范按需读取：`.kiro/steering/uee-files/skills/<name>/SKILL.md`
+详细规范按需读取：`.uee-data/skills/<name>/SKILL.md`
 
 ## 用户介入 4 个节点
 
@@ -53,7 +53,7 @@
 | 🔴 P3 | 任意阶段阻塞 | 必用完整简报 |
 | 🟢 P4 | deliver 完成 | 简短验收语句 |
 
-详细简报格式：`.kiro/steering/uee-files/templates/decision-brief.md`
+详细简报格式：`.uee-data/templates/decision-brief.md`
 
 ## 输出经济性原则
 
@@ -75,7 +75,7 @@
 完备性 / 准确性 / 一致性 / 可行性，每维 0-10，通过线 7-8。
 不通过 → 重做（最多 3 次）→ 切备选 → 简化交付。
 
-详细评分规则：`.kiro/steering/uee-files/quality-gates/four-dimensions.md`
+详细评分规则：`.uee-data/quality-gates/four-dimensions.md`
 
 ## 单 Skill 直用
 

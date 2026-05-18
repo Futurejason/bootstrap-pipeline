@@ -54,7 +54,47 @@
 | deliver | 交付包装 | 都跑 |
 | refine | 反馈优化 | 验收后修改 |
 
-详细规范按需读：`.uee-data/skills/<name>/SKILL.md`
+## 详细规范自动调用规则（重要）
+
+**AI 在以下场景必须主动 Read 对应文件，不要犹豫，不要全读**：
+
+| 触发场景 | AI 必读 |
+|---------|---------|
+| 进入 classify 阶段（任何问题第一步）| `.uee-data/orchestrator/routing-rules.md` |
+| 跑 review / 给评分 | `.uee-data/quality-gates/four-dimensions.md` + `.uee-data/quality-gates/adversarial-check.md` |
+| 关键论断需要标证据 | `.uee-data/quality-gates/evidence-chain.md` |
+| 标注可信度时 | `.uee-data/quality-gates/confidence-marker.md` |
+| 失败要降级时 | `.uee-data/quality-gates/fallback-strategy.md` |
+| 进入 L1 流程 | `.uee-data/orchestrator/flows/L1-light.md` |
+| 进入 L2 流程 | `.uee-data/orchestrator/flows/L2-standard.md` |
+| 进入 L3 流程 | `.uee-data/orchestrator/flows/L3-full.md` |
+| 调某 skill 前不确定细节 | `.uee-data/skills/<name>/SKILL.md` |
+| classify 后加载专家身份 | `.uee-data/experts/<name>.md`（按领域选）|
+| P1/P2/P3 出决策简报 | `.uee-data/templates/decision-brief.md` |
+| 用户问"什么是 X"且 X 在 UEE 内有定义 | 对应文件（按上面映射） |
+
+**禁止**：一次 Read 多个文件、读不需要的文件、把所有文件全读一遍。
+
+## 用户手动调用（# 引用）
+
+用户可在消息里用 Kiro 文件引用语法主动指定要参考的内容：
+
+```
+#[[file:.uee-data/skills/plan/SKILL.md]] 给我 3 个方案
+#[[file:.uee-data/experts/data-analyst.md]] 帮我分析这份数据
+#[[file:.uee-data/orchestrator/flows/L3-full.md]] 走完整流程
+```
+
+可引用的路径：
+- 完整入口：`.uee-data/entry.md`
+- 行为准则：`.uee-data/ETHOS.md`
+- 流程编排：`.uee-data/orchestrator/ORCHESTRATOR.md`
+- 路由规则：`.uee-data/orchestrator/routing-rules.md`
+- 三档流程：`.uee-data/orchestrator/flows/L{1,2,3}-*.md`
+- 9 个 Skill：`.uee-data/skills/<name>/SKILL.md`
+- 11 个专家：`.uee-data/experts/<name>.md`
+- 5 个质量组件：`.uee-data/quality-gates/*.md`
+- 决策简报模板：`.uee-data/templates/decision-brief.md`
 
 ## 用户介入 4 个节点
 

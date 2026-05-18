@@ -296,16 +296,18 @@ setup_kiro() {
 
   {
     echo "---"
-    echo "inclusion: auto"
+    echo "inclusion: always"
     echo "---"
     echo ""
     echo "$UEE_MARK"
     cat "$src"
   } > "$TARGET_DIR/.kiro/steering/uee.md"
 
-  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（仅此 1 个文件被 Kiro 自动加载）"
+  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（inclusion: always 强制加载）"
   echo "  ✓ 详细文件放在 $TARGET_DIR/.uee-data/（Kiro 不会自动加载）"
-  echo "  → 重启 Kiro 让规则生效"
+  echo ""
+  echo "  ⚠️  重要：请完全退出 Kiro 应用再重新打开（Cmd+Q / 任务管理器结束进程）"
+  echo "  ⚠️  仅关闭窗口不够，必须退出整个 Kiro 进程让 steering 重新加载"
 }
 
 setup_cursor() {

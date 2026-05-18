@@ -43,7 +43,37 @@ cd ~/projects/my-app
 | 局部 | `~/.uee/install.sh --local` | 把 UEE 复制到你项目的 `.uee/` 目录，项目自包含 |
 | 指定路径 | `~/.uee/install.sh --uee-dir=/path` | 用别处的 UEE |
 | 指定项目 | `~/.uee/install.sh --target=/path/proj` | 不在当前目录而在指定目录激活 |
-| 指定平台 | `~/.uee/install.sh --platform=cursor` | 仅配置某个平台 |
+| 指定平台 | `~/.uee/install.sh --platform=cursor` | 仅配置某个平台（跳过交互） |
+| 自动确认 | `~/.uee/install.sh --yes` | 自动安装检测到的全部（CI 友好） |
+
+## 多平台并存
+
+**完全支持**。例如同一台电脑上你既用 Kiro 又用 Cursor：
+
+```bash
+cd ~/projects/my-app
+
+# 默认交互式，从菜单多选
+~/.uee/install.sh
+# 选择: 1,2  → 同时配置 kiro 和 cursor
+
+# 或一次指定多个
+~/.uee/install.sh --platform=kiro --platform=cursor
+```
+
+各平台的配置文件互相独立，不会冲突：
+- Kiro 用 `.kiro/steering/uee.md`
+- Cursor 用 `.cursorrules`
+- Claude Code 用 `CLAUDE.md`
+- Windsurf 用 `.windsurfrules`
+
+也可以**增量安装**——先装 kiro，过几天再加 cursor：
+```bash
+~/.uee/install.sh --platform=kiro      # 第一次
+~/.uee/install.sh --platform=cursor    # 之后追加
+```
+
+之前已安装的平台不受影响。
 
 ## 卸载
 

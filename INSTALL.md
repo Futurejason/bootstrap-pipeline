@@ -27,10 +27,56 @@ cd ~/projects/my-app
 ~/.uee/install.sh
 ```
 
-脚本会：
-1. 自动检测当前项目可用的平台（Kiro/Cursor/Windsurf/Claude Code）
-2. 在你的项目里生成对应的配置文件
-3. 给出每个平台的下一步操作（如"重启 IDE"）
+**默认是交互式菜单**——脚本会列出检测到的平台并显示状态，你来选要安装哪些：
+
+```
+检测到当前可用的平台：
+
+  [1] kiro         ✓ 已检测到 | 未安装
+  [2] cursor       ✓ 已检测到 | 未安装
+  [3] windsurf       未检测到
+  [4] claude-code  ✓ 已检测到 | 未安装
+
+选择要安装的平台：
+  - 输入编号（多选用逗号分隔）：例 1,2
+  - 输入平台名：例 kiro,cursor
+  - 输入 a / all：全部
+  - 输入 d / detected：检测到的全部
+  - 输入 q / 留空：退出
+```
+
+支持的输入：
+- `1` 或 `1,2,4` — 按编号
+- `kiro` 或 `kiro,cursor` — 按名字
+- `a` / `all` — 安装全部 4 个
+- `d` / `detected` — 安装检测到的全部
+- `q` 或 直接回车 — 退出
+
+## 多平台并存
+
+同一台机器上同时用多个 AI 工具？没问题，UEE 支持任意组合：
+
+```bash
+# 一次配置 Kiro + Cursor
+~/.uee/install.sh --platform=kiro --platform=cursor
+
+# 或者交互菜单里选 1,2
+~/.uee/install.sh
+```
+
+各平台配置文件互不影响：
+| 平台 | 配置文件 |
+|------|---------|
+| Kiro | `.kiro/steering/uee.md` |
+| Cursor | `.cursorrules` |
+| Claude Code | `CLAUDE.md` |
+| Windsurf | `.windsurfrules` |
+
+**增量安装**：之前装了 kiro，今天再加 cursor？
+
+```bash
+~/.uee/install.sh --platform=cursor   # 之前的 kiro 配置不受影响
+```
 
 ## 安装选项
 
@@ -74,24 +120,13 @@ cd ~/projects/my-app
 
 如果不想在当前目录激活，用这个参数指定目标项目。
 
-### 仅配置某个平台
+### 自动确认（CI 友好）
 
 ```bash
-~/.uee/install.sh --platform=cursor
-~/.uee/install.sh --platform=kiro --platform=cursor   # 多个
+~/.uee/install.sh --yes
 ```
 
-不写则自动检测，写了就只配置指定的平台。可选值：
-- `kiro`
-- `cursor`
-- `windsurf`
-- `claude-code`
-
-### 帮助
-
-```bash
-~/.uee/install.sh --help
-```
+跳过交互菜单，自动安装检测到的所有平台。如果检测不到任何平台，脚本会失败退出（CI 应该用 `--platform=` 显式指定）。
 
 ## 平台说明
 

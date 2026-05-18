@@ -3,10 +3,12 @@
 # 在你当前项目中激活 Universal Expert Engine
 #
 # 用法：
-#   ~/.uee/install.sh                       # 全局模式（默认），target=当前目录
-#   ~/.uee/install.sh --local               # 局部模式，把 UEE 复制到目标项目
+#   ~/.uee/install.sh                       # 全局模式（默认），交互式选平台
+#   ~/.uee/install.sh --local               # 局部模式
 #   ~/.uee/install.sh --uee-dir=/path/uee   # 指定 UEE 仓库位置
 #   ~/.uee/install.sh --target=/path        # 指定目标项目
+#   ~/.uee/install.sh --platform=kiro       # 指定平台（跳过交互）
+#   ~/.uee/install.sh --yes                 # 自动选检测到的全部
 #   ~/.uee/install.sh --help
 
 set -e
@@ -15,11 +17,15 @@ set -e
 UEE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$(pwd)"
 MODE="global"   # global | local
-PLATFORMS=()    # 留空 = 自动检测
+SELECTED_PLATFORMS=()
+YES=0
 VERBOSE=0
 
 # ===== UEE 标记（用于卸载时识别 UEE 管理的文件）=====
 UEE_MARK="<!-- UEE-MANAGED -->"
+
+# ===== 所有支持的平台 =====
+ALL_PLATFORMS=("kiro" "cursor" "windsurf" "claude-code")
 
 # ===== 解析参数 =====
 print_help() {
@@ -34,9 +40,10 @@ OPTIONS:
   --local               局部模式：把 UEE 复制到目标项目内的 .uee/ 子目录
   --uee-dir=PATH        指定 UEE 仓库位置（默认：脚本所在目录）
   --target=PATH         指定要激活的目标项目（默认：当前目录）
-  --platform=NAME       仅配置某个平台，可重复使用：
+  --platform=NAME       指定平台（跳过交互），可重复使用：
                           --platform=kiro --platform=cursor
-                        支持：kiro / cursor / windsurf / claude-code
+                        支持值：kiro / cursor / windsurf / claude-code
+  -y, --yes             自动确认（跳过交互菜单，安装检测到的全部平台）
   -v, --verbose         显示详细日志
   -h, --help            显示此帮助
 
@@ -44,14 +51,17 @@ OPTIONS:
   # 一次性下载 UEE 到全局位置（用户做一次）
   git clone https://github.com/Futurejason/bootstrap-pipeline.git ~/.uee
 
-  # 在当前项目激活（自动检测平台，全局模式）
+  # 在当前项目激活（交互式选平台）
   ~/.uee/install.sh
 
-  # 在指定项目激活，局部模式（项目自包含）
-  ~/.uee/install.sh --target=~/projects/my-app --local
+  # 自动安装检测到的全部平台（CI 友好）
+  ~/.uee/install.sh --yes
 
-  # 仅配置 Cursor
-  ~/.uee/install.sh --platform=cursor
+  # 只安装 Kiro 和 Cursor
+  ~/.uee/install.sh --platform=kiro --platform=cursor
+
+  # 局部模式
+  ~/.uee/install.sh --local
 
   # 卸载
   ~/.uee/uninstall.sh
@@ -64,7 +74,8 @@ while [[ $# -gt 0 ]]; do
     --local) MODE="local"; shift ;;
     --uee-dir=*) UEE_DIR="${1#*=}"; shift ;;
     --target=*) TARGET_DIR="${1#*=}"; shift ;;
-    --platform=*) PLATFORMS+=("${1#*=}"); shift ;;
+    --platform=*) SELECTED_PLATFORMS+=("${1#*=}"); shift ;;
+    -y|--yes) YES=1; shift ;;
     -v|--verbose) VERBOSE=1; shift ;;
     -h|--help) print_help; exit 0 ;;
     *) echo "Unknown option: $1"; print_help; exit 1 ;;
@@ -89,17 +100,160 @@ echo "  目标项目：$TARGET_DIR"
 echo "  模式：$MODE"
 echo ""
 
+# ===== 平台检测 =====
+detect_platform() {
+  local p="$1"
+  case "$p" in
+    kiro) [ -d "$TARGET_DIR/.kiro" ] || pgrep -f "Kiro" >/dev/null 2>&1 ;;
+    cursor) command -v cursor >/dev/null 2>&1 ;;
+    windsurf) command -v windsurf >/dev/null 2>&1 ;;
+    claude-code) command -v claude >/dev/null 2>&1 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_already_installed() {
+  local p="$1"
+  case "$p" in
+    kiro) [ -f "$TARGET_DIR/.kiro/steering/uee.md" ] && grep -q "$UEE_MARK" "$TARGET_DIR/.kiro/steering/uee.md" 2>/dev/null ;;
+    cursor) [ -f "$TARGET_DIR/.cursorrules" ] && grep -q "$UEE_MARK" "$TARGET_DIR/.cursorrules" 2>/dev/null ;;
+    windsurf) [ -f "$TARGET_DIR/.windsurfrules" ] && grep -q "$UEE_MARK" "$TARGET_DIR/.windsurfrules" 2>/dev/null ;;
+    claude-code) [ -f "$TARGET_DIR/CLAUDE.md" ] && grep -q "$UEE_MARK" "$TARGET_DIR/CLAUDE.md" 2>/dev/null ;;
+    *) return 1 ;;
+  esac
+}
+
+# ===== 多选交互菜单 =====
+interactive_select() {
+  echo "检测到当前可用的平台："
+  echo ""
+
+  local i=1
+  local detected=()
+  local statuses=()
+
+  for p in "${ALL_PLATFORMS[@]}"; do
+    local status=""
+    if detect_platform "$p"; then
+      detected+=("$p")
+      if is_already_installed "$p"; then
+        status="✓ 已检测到 | 已安装"
+      else
+        status="✓ 已检测到 | 未安装"
+      fi
+    else
+      status="  未检测到"
+    fi
+    statuses+=("$status")
+    printf "  [%d] %-12s %s\n" "$i" "$p" "$status"
+    i=$((i + 1))
+  done
+
+  echo ""
+  echo "选择要安装的平台："
+  echo "  - 输入编号（多选用逗号分隔）：例 1,2"
+  echo "  - 输入平台名：例 kiro,cursor"
+  echo "  - 输入 a / all：全部"
+  echo "  - 输入 d / detected：检测到的全部"
+  echo "  - 输入 q / 留空：退出"
+  echo ""
+  read -rp "你的选择: " choice
+
+  if [ -z "$choice" ] || [[ "$choice" =~ ^(q|Q)$ ]]; then
+    echo "已取消"
+    exit 0
+  fi
+
+  if [[ "$choice" =~ ^(a|A|all|ALL)$ ]]; then
+    SELECTED_PLATFORMS=("${ALL_PLATFORMS[@]}")
+    return
+  fi
+
+  if [[ "$choice" =~ ^(d|D|detected|DETECTED)$ ]]; then
+    SELECTED_PLATFORMS=("${detected[@]}")
+    return
+  fi
+
+  # 解析编号或名称
+  IFS=',' read -ra parts <<< "$choice"
+  for part in "${parts[@]}"; do
+    part="$(echo "$part" | xargs)"  # trim
+    if [[ "$part" =~ ^[0-9]+$ ]]; then
+      local idx=$((part - 1))
+      if [ "$idx" -ge 0 ] && [ "$idx" -lt "${#ALL_PLATFORMS[@]}" ]; then
+        SELECTED_PLATFORMS+=("${ALL_PLATFORMS[$idx]}")
+      else
+        echo "  ⚠️  忽略无效编号：$part"
+      fi
+    else
+      # 检查是否是合法平台名
+      local valid=0
+      for p in "${ALL_PLATFORMS[@]}"; do
+        [ "$p" = "$part" ] && valid=1 && break
+      done
+      if [ "$valid" -eq 1 ]; then
+        SELECTED_PLATFORMS+=("$part")
+      else
+        echo "  ⚠️  忽略无效平台名：$part"
+      fi
+    fi
+  done
+}
+
+# ===== 决定要安装的平台 =====
+if [ ${#SELECTED_PLATFORMS[@]} -eq 0 ]; then
+  if [ "$YES" -eq 1 ]; then
+    # --yes：自动选检测到的全部
+    for p in "${ALL_PLATFORMS[@]}"; do
+      detect_platform "$p" && SELECTED_PLATFORMS+=("$p")
+    done
+    if [ ${#SELECTED_PLATFORMS[@]} -eq 0 ]; then
+      echo "❌ --yes 模式下未检测到任何平台。请用 --platform=NAME 显式指定。"
+      exit 1
+    fi
+    echo "自动选择（--yes）：${SELECTED_PLATFORMS[*]}"
+  else
+    interactive_select
+  fi
+fi
+
+if [ ${#SELECTED_PLATFORMS[@]} -eq 0 ]; then
+  echo "未选择任何平台，退出。"
+  exit 0
+fi
+
+# ===== 二次确认 =====
+echo ""
+echo "将安装以下平台："
+for p in "${SELECTED_PLATFORMS[@]}"; do
+  if is_already_installed "$p"; then
+    echo "  - $p（覆盖已安装）"
+  else
+    echo "  - $p"
+  fi
+done
+echo ""
+
+if [ "$YES" -ne 1 ] && [ ${#SELECTED_PLATFORMS[@]} -gt 0 ] && [ -z "$ALREADY_CONFIRMED" ]; then
+  read -rp "确认？[Y/n] " confirm
+  if [[ "$confirm" =~ ^[Nn]$ ]]; then
+    echo "已取消"
+    exit 0
+  fi
+fi
+
 # ===== 局部模式：复制 UEE 到目标项目 =====
 if [ "$MODE" = "local" ]; then
   if [ -d "$TARGET_DIR/.uee" ]; then
-    echo "⚠️  $TARGET_DIR/.uee 已存在，覆盖？[y/N]"
-    read -r confirm
-    [[ "$confirm" =~ ^[Yy]$ ]] || { echo "已取消"; exit 0; }
+    if [ "$YES" -ne 1 ]; then
+      echo "⚠️  $TARGET_DIR/.uee 已存在，覆盖？[y/N]"
+      read -r confirm
+      [[ "$confirm" =~ ^[Yy]$ ]] || { echo "已取消"; exit 0; }
+    fi
     rm -rf "$TARGET_DIR/.uee"
   fi
   echo "→ 复制 UEE 到 $TARGET_DIR/.uee ..."
   mkdir -p "$TARGET_DIR/.uee"
-  # 只复制运行时需要的内容（不复制 .git / .test-records / 自身）
   for item in entry.md ETHOS.md ARCHITECTURE.md README.md VERSION skills orchestrator experts quality-gates adapters templates examples; do
     if [ -e "$UEE_DIR/$item" ]; then
       cp -r "$UEE_DIR/$item" "$TARGET_DIR/.uee/"
@@ -111,40 +265,6 @@ else
   EFFECTIVE_UEE_DIR="$UEE_DIR"
 fi
 
-# ===== 平台检测 =====
-detect_platforms() {
-  local detected=()
-  [ -d "$TARGET_DIR/.kiro" ] && detected+=("kiro")
-  command -v cursor >/dev/null 2>&1 && detected+=("cursor")
-  command -v windsurf >/dev/null 2>&1 && detected+=("windsurf")
-  command -v claude >/dev/null 2>&1 && detected+=("claude-code")
-  echo "${detected[@]}"
-}
-
-if [ ${#PLATFORMS[@]} -eq 0 ]; then
-  PLATFORMS=($(detect_platforms))
-  if [ ${#PLATFORMS[@]} -eq 0 ]; then
-    echo "未自动检测到平台。请选择要配置的平台："
-    echo "  1) Kiro"
-    echo "  2) Cursor"
-    echo "  3) Windsurf"
-    echo "  4) Claude Code"
-    echo "  5) 全部"
-    echo "  q) 退出"
-    read -rp "选择: " choice
-    case "$choice" in
-      1) PLATFORMS=("kiro") ;;
-      2) PLATFORMS=("cursor") ;;
-      3) PLATFORMS=("windsurf") ;;
-      4) PLATFORMS=("claude-code") ;;
-      5) PLATFORMS=("kiro" "cursor" "windsurf" "claude-code") ;;
-      *) exit 0 ;;
-    esac
-  else
-    echo "检测到平台：${PLATFORMS[*]}"
-  fi
-fi
-
 # ===== 计算相对路径（仅 Kiro 用）=====
 relpath() {
   local from="$1"
@@ -154,7 +274,6 @@ relpath() {
   elif command -v perl >/dev/null 2>&1; then
     perl -e 'use File::Spec; print File::Spec->abs2rel($ARGV[0], $ARGV[1])' "$to" "$from"
   else
-    # 简单 fallback：用绝对路径
     echo "$to"
   fi
 }
@@ -240,7 +359,8 @@ setup_claude_code() {
 }
 
 # ===== 执行配置 =====
-for p in "${PLATFORMS[@]}"; do
+echo ""
+for p in "${SELECTED_PLATFORMS[@]}"; do
   case "$p" in
     kiro) setup_kiro ;;
     cursor) setup_cursor ;;
@@ -255,7 +375,13 @@ echo "=========================================="
 echo "  ✅ 安装完成"
 echo "=========================================="
 echo ""
+echo "已安装的平台：${SELECTED_PLATFORMS[*]}"
+echo ""
 echo "对于 ChatGPT / Claude Projects 等 Web 平台："
 echo "  请将 $EFFECTIVE_UEE_DIR/entry.md 内容粘贴到 Instructions"
 echo ""
-echo "卸载：~/.uee/uninstall.sh --target=$TARGET_DIR"
+echo "卸载："
+echo "  $UEE_DIR/uninstall.sh --target=$TARGET_DIR"
+echo ""
+echo "再次安装其他平台："
+echo "  $UEE_DIR/install.sh --target=$TARGET_DIR --platform=NAME"

@@ -291,13 +291,15 @@ setup_kiro() {
   rm -rf "$kiro_uee_dir"
   mkdir -p "$kiro_uee_dir"
 
-  # 复制 Kiro steering 需要的核心文件（约 50KB 全部）
+  # 复制 UEE 全部核心文件供 AI 按需读取（不通过 steering 强制加载）
   cp "$EFFECTIVE_UEE_DIR/entry.md" "$kiro_uee_dir/"
   cp "$EFFECTIVE_UEE_DIR/ETHOS.md" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/orchestrator" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/quality-gates" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/skills" "$kiro_uee_dir/"
 
+  # uee.md 只主动加载 entry.md（避免 context 爆炸导致网络超时/中断）
+  # entry.md 已含完整 9 阶段流程概要；详细规范用户/AI 需要时自行 read uee-files/
   cat > "$TARGET_DIR/.kiro/steering/uee.md" << EOF
 ---
 inclusion: auto
@@ -306,24 +308,27 @@ inclusion: auto
 $UEE_MARK
 # Universal Expert Engine
 
+引擎入口（已包含 9 阶段流程的完整概要）：
+
 #[[file:uee-files/entry.md]]
-#[[file:uee-files/ETHOS.md]]
-#[[file:uee-files/orchestrator/ORCHESTRATOR.md]]
-#[[file:uee-files/orchestrator/routing-rules.md]]
-#[[file:uee-files/quality-gates/four-dimensions.md]]
-#[[file:uee-files/quality-gates/evidence-chain.md]]
-#[[file:uee-files/skills/classify/SKILL.md]]
-#[[file:uee-files/skills/clarify/SKILL.md]]
-#[[file:uee-files/skills/resource/SKILL.md]]
-#[[file:uee-files/skills/plan/SKILL.md]]
-#[[file:uee-files/skills/design/SKILL.md]]
-#[[file:uee-files/skills/execute/SKILL.md]]
-#[[file:uee-files/skills/review/SKILL.md]]
-#[[file:uee-files/skills/deliver/SKILL.md]]
-#[[file:uee-files/skills/refine/SKILL.md]]
+
+## 详细规范（按需读取，不自动加载）
+
+如需查阅细节，请读取以下文件（不要全部加载，按需查阅）：
+
+- 行为准则：\`.kiro/steering/uee-files/ETHOS.md\`
+- 流程编排：\`.kiro/steering/uee-files/orchestrator/ORCHESTRATOR.md\`
+- 路由规则：\`.kiro/steering/uee-files/orchestrator/routing-rules.md\`
+- 三档流程：\`.kiro/steering/uee-files/orchestrator/flows/L{1,2,3}-*.md\`
+- 质量四维：\`.kiro/steering/uee-files/quality-gates/four-dimensions.md\`
+- 证据链：\`.kiro/steering/uee-files/quality-gates/evidence-chain.md\`
+- 可信度标注：\`.kiro/steering/uee-files/quality-gates/confidence-marker.md\`
+- 对抗性自检：\`.kiro/steering/uee-files/quality-gates/adversarial-check.md\`
+- 失败降级：\`.kiro/steering/uee-files/quality-gates/fallback-strategy.md\`
+- 9 个 Skill：\`.kiro/steering/uee-files/skills/<name>/SKILL.md\`
 EOF
-  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md"
-  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/"
+  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（仅引用 entry.md 避免 context 过载）"
+  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/（AI 按需读取）"
   echo "  → 重启 Kiro 让规则生效"
 }
 

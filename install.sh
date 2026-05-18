@@ -292,14 +292,20 @@ setup_kiro() {
   mkdir -p "$kiro_uee_dir"
 
   # 复制 UEE 全部核心文件供 AI 按需读取（不通过 steering 强制加载）
+  # entry-lite 是默认加载，entry 是详细备份
+  cp "$EFFECTIVE_UEE_DIR/entry-lite.md" "$kiro_uee_dir/" 2>/dev/null || true
   cp "$EFFECTIVE_UEE_DIR/entry.md" "$kiro_uee_dir/"
   cp "$EFFECTIVE_UEE_DIR/ETHOS.md" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/orchestrator" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/quality-gates" "$kiro_uee_dir/"
   cp -r "$EFFECTIVE_UEE_DIR/skills" "$kiro_uee_dir/"
+  cp -r "$EFFECTIVE_UEE_DIR/templates" "$kiro_uee_dir/" 2>/dev/null || true
 
-  # uee.md 只主动加载 entry.md（避免 context 爆炸导致网络超时/中断）
-  # entry.md 已含完整 9 阶段流程概要；详细规范用户/AI 需要时自行 read uee-files/
+  # uee.md 默认加载 entry-lite.md（精简版，省 token）
+  # 用户说"详细模式"或"完整流程"时，AI 自行 read entry.md（完整版）
+  local entry_file="entry-lite.md"
+  [ ! -f "$kiro_uee_dir/entry-lite.md" ] && entry_file="entry.md"
+
   cat > "$TARGET_DIR/.kiro/steering/uee.md" << EOF
 ---
 inclusion: auto
@@ -308,27 +314,29 @@ inclusion: auto
 $UEE_MARK
 # Universal Expert Engine
 
-引擎入口（已包含 9 阶段流程的完整概要）：
+精简版引擎入口（已含完整 9 阶段流程、4 个用户介入点、四维质量门）：
 
-#[[file:uee-files/entry.md]]
+#[[file:uee-files/$entry_file]]
 
-## 详细规范（按需读取，不自动加载）
+## 详细规范（按需读取，不自动加载，避免 token 浪费）
 
-如需查阅细节，请读取以下文件（不要全部加载，按需查阅）：
+需要细节时，按需读取以下文件：
 
-- 行为准则：\`.kiro/steering/uee-files/ETHOS.md\`
-- 流程编排：\`.kiro/steering/uee-files/orchestrator/ORCHESTRATOR.md\`
-- 路由规则：\`.kiro/steering/uee-files/orchestrator/routing-rules.md\`
-- 三档流程：\`.kiro/steering/uee-files/orchestrator/flows/L{1,2,3}-*.md\`
-- 质量四维：\`.kiro/steering/uee-files/quality-gates/four-dimensions.md\`
-- 证据链：\`.kiro/steering/uee-files/quality-gates/evidence-chain.md\`
-- 可信度标注：\`.kiro/steering/uee-files/quality-gates/confidence-marker.md\`
-- 对抗性自检：\`.kiro/steering/uee-files/quality-gates/adversarial-check.md\`
-- 失败降级：\`.kiro/steering/uee-files/quality-gates/fallback-strategy.md\`
-- 9 个 Skill：\`.kiro/steering/uee-files/skills/<name>/SKILL.md\`
+- 完整入口（含详细 skill 描述）：\`uee-files/entry.md\`
+- 行为准则：\`uee-files/ETHOS.md\`
+- 流程编排：\`uee-files/orchestrator/ORCHESTRATOR.md\`
+- 路由规则：\`uee-files/orchestrator/routing-rules.md\`
+- 三档流程：\`uee-files/orchestrator/flows/L{1,2,3}-*.md\`
+- 质量四维：\`uee-files/quality-gates/four-dimensions.md\`
+- 证据链：\`uee-files/quality-gates/evidence-chain.md\`
+- 可信度：\`uee-files/quality-gates/confidence-marker.md\`
+- 对抗自检：\`uee-files/quality-gates/adversarial-check.md\`
+- 失败降级：\`uee-files/quality-gates/fallback-strategy.md\`
+- 9 个 Skill：\`uee-files/skills/<name>/SKILL.md\`
+- 决策简报模板：\`uee-files/templates/decision-brief.md\`
 EOF
-  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（仅引用 entry.md 避免 context 过载）"
-  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/（AI 按需读取）"
+  echo "  ✓ $TARGET_DIR/.kiro/steering/uee.md（默认加载 $entry_file，省 token）"
+  echo "  ✓ UEE 核心文件已复制到 $TARGET_DIR/.kiro/steering/uee-files/"
   echo "  → 重启 Kiro 让规则生效"
 }
 
@@ -339,11 +347,14 @@ setup_cursor() {
     echo "  ⚠️  $target 已存在且非 UEE 管理，备份为 $target.bak"
     cp "$target" "$target.bak"
   fi
+  # 优先用 entry-lite（省 token），fallback 到 entry
+  local src="$EFFECTIVE_UEE_DIR/entry-lite.md"
+  [ ! -f "$src" ] && src="$EFFECTIVE_UEE_DIR/entry.md"
   {
     echo "$UEE_MARK"
-    cat "$EFFECTIVE_UEE_DIR/entry.md"
+    cat "$src"
   } > "$target"
-  echo "  ✓ $target"
+  echo "  ✓ $target ($(basename "$src"))"
   echo "  → 重启 Cursor 让规则生效"
 }
 
@@ -354,11 +365,13 @@ setup_windsurf() {
     echo "  ⚠️  $target 已存在且非 UEE 管理，备份为 $target.bak"
     cp "$target" "$target.bak"
   fi
+  local src="$EFFECTIVE_UEE_DIR/entry-lite.md"
+  [ ! -f "$src" ] && src="$EFFECTIVE_UEE_DIR/entry.md"
   {
     echo "$UEE_MARK"
-    cat "$EFFECTIVE_UEE_DIR/entry.md"
+    cat "$src"
   } > "$target"
-  echo "  ✓ $target"
+  echo "  ✓ $target ($(basename "$src"))"
   echo "  → 重启 Windsurf 让规则生效"
 }
 
@@ -369,11 +382,13 @@ setup_claude_code() {
     echo "  ⚠️  $target 已存在且非 UEE 管理，备份为 $target.bak"
     cp "$target" "$target.bak"
   fi
+  local src="$EFFECTIVE_UEE_DIR/entry-lite.md"
+  [ ! -f "$src" ] && src="$EFFECTIVE_UEE_DIR/entry.md"
   {
     echo "$UEE_MARK"
-    cat "$EFFECTIVE_UEE_DIR/entry.md"
+    cat "$src"
   } > "$target"
-  echo "  ✓ $target"
+  echo "  ✓ $target ($(basename "$src"))"
   echo "  → 在该目录下运行 'claude' 即可使用"
 }
 
